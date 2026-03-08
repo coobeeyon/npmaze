@@ -135,11 +135,10 @@
       "title": "Improve ARIA labels and screen reader support",
       "description": "Add aria-labels to theme toggle, pig emoji, canvas placement mode labels, seed input aria-describedby",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 1,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T21:44:04.347149545Z",
-      "updated_at": "2026-03-08T21:44:48.312894376Z"
+      "updated_at": "2026-03-08T21:45:20.734192097Z"
     },
     "lb-j8xf": {
       "id": "lb-j8xf",
