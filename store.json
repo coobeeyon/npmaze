@@ -246,8 +246,9 @@
       "item_type": "feature",
       "status": "open",
       "priority": 3,
+      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T22:22:07.493395737Z",
-      "updated_at": "2026-03-08T22:22:07.493395737Z"
+      "updated_at": "2026-03-08T22:25:10.929518608Z"
     },
     "lb-riil": {
       "id": "lb-riil",
