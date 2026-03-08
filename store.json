@@ -158,8 +158,18 @@
       "dep_type": "parent"
     },
     {
+      "from_id": "lb-1jf7",
+      "to_id": "lb-riil",
+      "dep_type": "parent"
+    },
+    {
       "from_id": "lb-2ejg",
       "to_id": "lb-l7l1",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-2ux0",
+      "to_id": "lb-riil",
       "dep_type": "parent"
     },
     {
@@ -173,6 +183,11 @@
       "dep_type": "parent"
     },
     {
+      "from_id": "lb-m6dk",
+      "to_id": "lb-riil",
+      "dep_type": "parent"
+    },
+    {
       "from_id": "lb-mbwq",
       "to_id": "lb-l7l1",
       "dep_type": "parent"
@@ -183,32 +198,17 @@
       "dep_type": "parent"
     },
     {
+      "from_id": "lb-uc58",
+      "to_id": "lb-riil",
+      "dep_type": "parent"
+    },
+    {
       "from_id": "lb-voc2",
       "to_id": "lb-l7l1",
       "dep_type": "parent"
     },
     {
-      "from_id": "lb-2ux0",
-      "to_id": "lb-riil",
-      "dep_type": "parent"
-    },
-    {
-      "from_id": "lb-m6dk",
-      "to_id": "lb-riil",
-      "dep_type": "parent"
-    },
-    {
-      "from_id": "lb-1jf7",
-      "to_id": "lb-riil",
-      "dep_type": "parent"
-    },
-    {
       "from_id": "lb-x83f",
-      "to_id": "lb-riil",
-      "dep_type": "parent"
-    },
-    {
-      "from_id": "lb-uc58",
       "to_id": "lb-riil",
       "dep_type": "parent"
     }
