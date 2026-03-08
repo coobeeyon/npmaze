@@ -1,5 +1,15 @@
 {
   "items": {
+    "lb-0j0f": {
+      "id": "lb-0j0f",
+      "title": "Add focus-visible styles and disabled button styling",
+      "description": "Add :focus-visible styles for buttons, :disabled styles for buttons, and canvas focus ring",
+      "item_type": "task",
+      "status": "open",
+      "priority": 1,
+      "created_at": "2026-03-08T21:44:04.340720289Z",
+      "updated_at": "2026-03-08T21:44:04.340720289Z"
+    },
     "lb-19of": {
       "id": "lb-19of",
       "title": "Maze solver with solution display",
@@ -345,6 +355,11 @@
     {
       "from_id": "lb-zs96",
       "to_id": "lb-zvha",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-0j0f",
+      "to_id": "lb-ku28",
       "dep_type": "parent"
     }
   ]
