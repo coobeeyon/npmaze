@@ -11,6 +11,12 @@ export interface DifficultyScore {
   deadEnds: number;
   /** Number of junctions (cells with 3+ exits) */
   junctions: number;
+  /** Total number of cells */
+  totalCells: number;
+  /** Total number of open passages */
+  totalPassages: number;
+  /** Average exits per cell */
+  avgExits: number;
   /** Descriptive label */
   label: string;
 }
@@ -39,14 +45,20 @@ export function scoreDifficulty(
   const totalCells = topology.rows * topology.cols;
   let deadEnds = 0;
   let junctions = 0;
+  let totalExits = 0;
 
   for (let row = 0; row < topology.rows; row++) {
     for (let col = 0; col < topology.cols; col++) {
       const exits = countExits({ row, col }, topology, walls);
+      totalExits += exits;
       if (exits === 1) deadEnds++;
       if (exits >= 3) junctions++;
     }
   }
+
+  // Each passage is counted from both sides
+  const totalPassages = totalExits / 2;
+  const avgExits = totalCells > 0 ? totalExits / totalCells : 0;
 
   const pathLength = solutionPath?.length ?? 0;
 
@@ -74,5 +86,5 @@ export function scoreDifficulty(
   else if (rating < 80) label = "Hard";
   else label = "Expert";
 
-  return { rating, pathLength, deadEnds, junctions, label };
+  return { rating, pathLength, deadEnds, junctions, totalCells, totalPassages, avgExits: Math.round(avgExits * 100) / 100, label };
 }
