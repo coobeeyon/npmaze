@@ -511,6 +511,304 @@ export function exportMazePNG(
   link.click();
 }
 
+/** Export maze as SVG and trigger download */
+export function exportMazeSVG(
+  maze: MazeState,
+  solutionPath: CellCoord[] | null = null,
+  start: CellCoord = { row: 0, col: 0 },
+  end: CellCoord = { row: maze.config.rows - 1, col: maze.config.cols - 1 },
+) {
+  const { config, walls } = maze;
+  const topology = createTopology(config.surface, config.rows, config.cols);
+  const cellSize = 30;
+  const padding = 40;
+  const width = cellSize * config.cols + padding * 2;
+  const height = cellSize * config.rows + padding * 2;
+  const offsetX = padding;
+  const offsetY = padding;
+  const crossings = maze.crossings;
+  const crossingCellKey = (c: CellCoord) => `${c.row},${c.col}`;
+
+  const parts: string[] = [];
+  parts.push(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
+  );
+
+  // Background
+  parts.push(`<rect width="${width}" height="${height}" fill="${COLORS.bgPrimary}"/>`);
+
+  // Cell background
+  parts.push(
+    `<rect x="${offsetX}" y="${offsetY}" width="${cellSize * config.cols}" height="${cellSize * config.rows}" fill="${COLORS.cellBg}"/>`,
+  );
+
+  // Start pig
+  const startCx = offsetX + start.col * cellSize + cellSize / 2;
+  const startCy = offsetY + start.row * cellSize + cellSize / 2;
+  parts.push(svgPig(startCx, startCy, cellSize));
+
+  // End carrot
+  const endCx = offsetX + end.col * cellSize + cellSize / 2;
+  const endCy = offsetY + end.row * cellSize + cellSize / 2;
+  parts.push(svgCarrot(endCx, endCy, cellSize));
+
+  // Walls (skip crossing cells)
+  for (let row = 0; row < config.rows; row++) {
+    for (let col = 0; col < config.cols; col++) {
+      const cell: CellCoord = { row, col };
+      const x = offsetX + col * cellSize;
+      const y = offsetY + row * cellSize;
+
+      if (crossings.has(crossingCellKey(cell))) continue;
+
+      for (const dir of ALL_DIRECTIONS) {
+        const neighbor = topology.neighbor(cell, dir);
+        if (!neighbor) {
+          // Boundary wall
+          const [x1, y1, x2, y2] = wallLineCoords(x, y, cellSize, dir);
+          parts.push(
+            `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH + 1}" stroke-linecap="round"/>`,
+          );
+          continue;
+        }
+
+        const wk = wallKey(cell, neighbor);
+        if (!walls.has(wk)) continue;
+
+        const [x1, y1, x2, y2] = wallLineCoords(x, y, cellSize, dir);
+        parts.push(
+          `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`,
+        );
+      }
+    }
+  }
+
+  // Crossings
+  parts.push(svgCrossings(topology, crossings, cellSize, offsetX, offsetY));
+
+  // Solution path
+  if (solutionPath && solutionPath.length > 1) {
+    const pathWidth = Math.max(cellSize * 0.15, 2);
+    // Build segments (break at wraps)
+    let segment: string[] = [];
+    for (let i = 0; i < solutionPath.length; i++) {
+      const cell = solutionPath[i];
+      const cx = offsetX + cell.col * cellSize + cellSize / 2;
+      const cy = offsetY + cell.row * cellSize + cellSize / 2;
+      if (i === 0) {
+        segment.push(`M${cx},${cy}`);
+      } else {
+        const prev = solutionPath[i - 1];
+        const dr = Math.abs(cell.row - prev.row);
+        const dc = Math.abs(cell.col - prev.col);
+        if (dr > 1 || dc > 1) {
+          // Wrap — flush segment and start new one
+          if (segment.length > 0) {
+            parts.push(
+              `<path d="${segment.join(" ")}" fill="none" stroke="${COLORS.accent}" stroke-width="${pathWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>`,
+            );
+          }
+          segment = [`M${cx},${cy}`];
+        } else {
+          segment.push(`L${cx},${cy}`);
+        }
+      }
+    }
+    if (segment.length > 0) {
+      parts.push(
+        `<path d="${segment.join(" ")}" fill="none" stroke="${COLORS.accent}" stroke-width="${pathWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>`,
+      );
+    }
+  }
+
+  // Wrap indicators
+  parts.push(svgWrapIndicators(topology, cellSize, offsetX, offsetY));
+
+  parts.push("</svg>");
+
+  const svgString = parts.join("\n");
+  const blob = new Blob([svgString], { type: "image/svg+xml" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.download = `skinny-pig-maze-${config.rows}x${config.cols}.svg`;
+  link.href = url;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function wallLineCoords(
+  x: number,
+  y: number,
+  cellSize: number,
+  dir: Direction,
+): [number, number, number, number] {
+  switch (dir) {
+    case "north":
+      return [x, y, x + cellSize, y];
+    case "south":
+      return [x, y + cellSize, x + cellSize, y + cellSize];
+    case "west":
+      return [x, y, x, y + cellSize];
+    case "east":
+      return [x + cellSize, y, x + cellSize, y + cellSize];
+  }
+}
+
+function svgPig(cx: number, cy: number, size: number): string {
+  const s = size * 0.35;
+  const parts: string[] = [];
+  // Body
+  parts.push(
+    `<ellipse cx="${cx}" cy="${cy}" rx="${s}" ry="${s * 0.75}" fill="${COLORS.pigPink}" stroke="${COLORS.pigDark}" stroke-width="1"/>`,
+  );
+  // Ears
+  parts.push(
+    `<ellipse cx="${cx - s * 0.6}" cy="${cy - s * 0.5}" rx="${s * 0.25}" ry="${s * 0.3}" transform="rotate(${(-0.3 * 180) / Math.PI} ${cx - s * 0.6} ${cy - s * 0.5})" fill="${COLORS.pigPink}" stroke="${COLORS.pigDark}" stroke-width="1"/>`,
+  );
+  parts.push(
+    `<ellipse cx="${cx + s * 0.6}" cy="${cy - s * 0.5}" rx="${s * 0.25}" ry="${s * 0.3}" transform="rotate(${(0.3 * 180) / Math.PI} ${cx + s * 0.6} ${cy - s * 0.5})" fill="${COLORS.pigPink}" stroke="${COLORS.pigDark}" stroke-width="1"/>`,
+  );
+  // Eyes
+  parts.push(
+    `<circle cx="${cx - s * 0.25}" cy="${cy - s * 0.1}" r="${s * 0.08}" fill="${COLORS.text}"/>`,
+  );
+  parts.push(
+    `<circle cx="${cx + s * 0.25}" cy="${cy - s * 0.1}" r="${s * 0.08}" fill="${COLORS.text}"/>`,
+  );
+  // Nose
+  parts.push(
+    `<ellipse cx="${cx}" cy="${cy + s * 0.15}" rx="${s * 0.15}" ry="${s * 0.1}" fill="${COLORS.pigDark}"/>`,
+  );
+  return parts.join("\n");
+}
+
+function svgCarrot(cx: number, cy: number, size: number): string {
+  const s = size * 0.3;
+  const parts: string[] = [];
+  // Carrot body
+  parts.push(
+    `<polygon points="${cx},${cy + s} ${cx - s * 0.4},${cy - s * 0.3} ${cx + s * 0.4},${cy - s * 0.3}" fill="${COLORS.endColor}"/>`,
+  );
+  // Leaves
+  parts.push(
+    `<ellipse cx="${cx - s * 0.15}" cy="${cy - s * 0.5}" rx="${s * 0.1}" ry="${s * 0.25}" transform="rotate(${(-0.3 * 180) / Math.PI} ${cx - s * 0.15} ${cy - s * 0.5})" fill="#66BB6A"/>`,
+  );
+  parts.push(
+    `<ellipse cx="${cx + s * 0.15}" cy="${cy - s * 0.5}" rx="${s * 0.1}" ry="${s * 0.25}" transform="rotate(${(0.3 * 180) / Math.PI} ${cx + s * 0.15} ${cy - s * 0.5})" fill="#66BB6A"/>`,
+  );
+  return parts.join("\n");
+}
+
+function svgCrossings(
+  _topology: Topology,
+  crossings: Map<string, CrossingOver>,
+  cellSize: number,
+  offsetX: number,
+  offsetY: number,
+): string {
+  const parts: string[] = [];
+  const gap = cellSize * 0.3;
+
+  for (const [ck, over] of crossings) {
+    const [rowStr, colStr] = ck.split(",");
+    const row = Number(rowStr);
+    const col = Number(colStr);
+    const x = offsetX + col * cellSize;
+    const y = offsetY + row * cellSize;
+    const cx = x + cellSize / 2;
+    const cy = y + cellSize / 2;
+
+    if (over === "h") {
+      // Horizontal over, vertical under
+      // E/W wall stubs
+      parts.push(`<line x1="${x + cellSize}" y1="${y}" x2="${x + cellSize}" y2="${cy - gap}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      parts.push(`<line x1="${x + cellSize}" y1="${cy + gap}" x2="${x + cellSize}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      parts.push(`<line x1="${x}" y1="${y}" x2="${x}" y2="${cy - gap}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      parts.push(`<line x1="${x}" y1="${cy + gap}" x2="${x}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      // Bridge background
+      parts.push(`<rect x="${x}" y="${cy - gap}" width="${cellSize}" height="${gap * 2}" fill="${COLORS.cellBg}"/>`);
+      // Bridge walls
+      parts.push(`<line x1="${x}" y1="${cy - gap}" x2="${x + cellSize}" y2="${cy - gap}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      parts.push(`<line x1="${x}" y1="${cy + gap}" x2="${x + cellSize}" y2="${cy + gap}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+    } else {
+      // Vertical over, horizontal under
+      // N/S wall stubs
+      parts.push(`<line x1="${x}" y1="${y}" x2="${cx - gap}" y2="${y}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      parts.push(`<line x1="${cx + gap}" y1="${y}" x2="${x + cellSize}" y2="${y}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      parts.push(`<line x1="${x}" y1="${y + cellSize}" x2="${cx - gap}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      parts.push(`<line x1="${cx + gap}" y1="${y + cellSize}" x2="${x + cellSize}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      // Bridge background
+      parts.push(`<rect x="${cx - gap}" y="${y}" width="${gap * 2}" height="${cellSize}" fill="${COLORS.cellBg}"/>`);
+      // Bridge walls
+      parts.push(`<line x1="${cx - gap}" y1="${y}" x2="${cx - gap}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+      parts.push(`<line x1="${cx + gap}" y1="${y}" x2="${cx + gap}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
+    }
+  }
+  return parts.join("\n");
+}
+
+function svgWrapIndicators(
+  topology: Topology,
+  cellSize: number,
+  offsetX: number,
+  offsetY: number,
+): string {
+  const parts: string[] = [];
+  const indicatorSize = 6;
+
+  for (let row = 0; row < topology.rows; row++) {
+    for (let col = 0; col < topology.cols; col++) {
+      const cell: CellCoord = { row, col };
+      const x = offsetX + col * cellSize;
+      const y = offsetY + row * cellSize;
+
+      for (const dir of ALL_DIRECTIONS) {
+        const neighbor = topology.neighbor(cell, dir);
+        if (!neighbor) continue;
+
+        const isWrap =
+          (dir === "north" && neighbor.row !== row - 1) ||
+          (dir === "south" && neighbor.row !== row + 1) ||
+          (dir === "west" && neighbor.col !== col - 1) ||
+          (dir === "east" && neighbor.col !== col + 1);
+
+        if (!isWrap) continue;
+
+        const isFlip =
+          (dir === "east" || dir === "west") && neighbor.row !== row;
+
+        const color = isFlip ? COLORS.wrapFlip : wrapColor(dir);
+
+        let points = "";
+        switch (dir) {
+          case "north": {
+            const cx = x + cellSize / 2;
+            points = `${cx - indicatorSize},${y + 1} ${cx + indicatorSize},${y + 1} ${cx},${y - indicatorSize + 1}`;
+            break;
+          }
+          case "south": {
+            const cx = x + cellSize / 2;
+            points = `${cx - indicatorSize},${y + cellSize - 1} ${cx + indicatorSize},${y + cellSize - 1} ${cx},${y + cellSize + indicatorSize - 1}`;
+            break;
+          }
+          case "west": {
+            const cy = y + cellSize / 2;
+            points = `${x + 1},${cy - indicatorSize} ${x + 1},${cy + indicatorSize} ${x - indicatorSize + 1},${cy}`;
+            break;
+          }
+          case "east": {
+            const cy = y + cellSize / 2;
+            points = `${x + cellSize - 1},${cy - indicatorSize} ${x + cellSize - 1},${cy + indicatorSize} ${x + cellSize + indicatorSize - 1},${cy}`;
+            break;
+          }
+        }
+        parts.push(`<polygon points="${points}" fill="${color}"/>`);
+      }
+    }
+  }
+  return parts.join("\n");
+}
+
 /** Hit test: given a click position, find the nearest wall key */
 export function hitTestWall(
   x: number,

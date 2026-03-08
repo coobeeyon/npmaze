@@ -8,7 +8,7 @@ import { MazeCanvas, type PlacementMode } from "./components/MazeCanvas";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { TopologyInfo } from "./components/TopologyInfo";
 import { DifficultyPanel } from "./components/DifficultyPanel";
-import { exportMazePNG } from "./rendering/drawMaze";
+import { exportMazePNG, exportMazeSVG } from "./rendering/drawMaze";
 import { scoreDifficulty } from "./maze/difficulty";
 import { mulberry32, randomSeed } from "./maze/rng";
 import { useTheme } from "./theme/useTheme";
@@ -287,6 +287,10 @@ export default function App() {
     exportMazePNG(maze, solutionPath, start, end);
   }, [maze, solutionPath, start, end]);
 
+  const handleExportSVG = useCallback(() => {
+    exportMazeSVG(maze, solutionPath, start, end);
+  }, [maze, solutionPath, start, end]);
+
   const handlePlaceCell = useCallback((cell: CellCoord) => {
     if (placementMode === "start") {
       setStart(cell);
@@ -373,6 +377,7 @@ export default function App() {
             onToggleEdit={() => setEditMode((e) => !e)}
             onToggleSolution={() => setShowSolution((s) => !s)}
             onExport={handleExport}
+            onExportSVG={handleExportSVG}
             placementMode={placementMode}
             onSetPlacement={setPlacementMode}
             solvingAnimating={solvingAnimating}

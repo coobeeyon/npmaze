@@ -14,6 +14,7 @@ interface ConfigPanelProps {
   onToggleEdit: () => void;
   onToggleSolution: () => void;
   onExport: () => void;
+  onExportSVG: () => void;
   onSetPlacement: (mode: PlacementMode) => void;
   solvingAnimating: boolean;
   onAnimateSolve: () => void;
@@ -54,6 +55,7 @@ export function ConfigPanel({
   onToggleEdit,
   onToggleSolution,
   onExport,
+  onExportSVG,
   placementMode,
   onSetPlacement,
   solvingAnimating,
@@ -234,6 +236,9 @@ export function ConfigPanel({
         </button>
         <button className="btn btn-secondary" onClick={onExport}>
           Export PNG
+        </button>
+        <button className="btn btn-secondary" onClick={onExportSVG}>
+          Export SVG
         </button>
         <button className="btn btn-secondary" onClick={onCopyLink}>
           {linkCopied ? "Link Copied!" : "Copy Link"}
