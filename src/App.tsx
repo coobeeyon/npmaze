@@ -7,7 +7,9 @@ import { solveMaze } from "./maze/solver";
 import { MazeCanvas, type PlacementMode } from "./components/MazeCanvas";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { TopologyInfo } from "./components/TopologyInfo";
+import { DifficultyPanel } from "./components/DifficultyPanel";
 import { exportMazePNG } from "./rendering/drawMaze";
+import { scoreDifficulty } from "./maze/difficulty";
 import "./App.css";
 
 const DEFAULT_CONFIG: MazeConfig = {
@@ -40,6 +42,12 @@ export default function App() {
     const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
     return solveMaze(topology, maze.walls, start, end, maze.crossings);
   }, [showSolution, maze, start, end]);
+
+  const difficulty = useMemo(() => {
+    const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
+    const path = solveMaze(topology, maze.walls, start, end, maze.crossings);
+    return scoreDifficulty(topology, maze.walls, path, maze.crossings);
+  }, [maze, start, end]);
 
   const stopAnimation = useCallback(() => {
     if (animationRef.current !== null) {
@@ -176,6 +184,7 @@ export default function App() {
             onSetPlacement={setPlacementMode}
           />
           <TopologyInfo surface={config.surface} />
+          <DifficultyPanel score={difficulty} />
         </aside>
 
         <main className="maze-container">
