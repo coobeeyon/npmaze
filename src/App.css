@@ -253,6 +253,27 @@
   transition: width 0.3s ease;
 }
 
+/* Reset view button */
+.reset-view-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  border: 1px solid #D2B48C;
+  border-radius: 6px;
+  background: rgba(255, 245, 238, 0.9);
+  color: #5D4037;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  z-index: 1;
+}
+
+.reset-view-btn:hover {
+  background: #FAEBD7;
+}
+
 /* Responsive */
 @media (max-width: 700px) {
   .app-body {
