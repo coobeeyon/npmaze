@@ -188,6 +188,11 @@
       "dep_type": "parent"
     },
     {
+      "from_id": "lb-9bsm",
+      "to_id": "lb-riil",
+      "dep_type": "parent"
+    },
+    {
       "from_id": "lb-cg1b",
       "to_id": "lb-l7l1",
       "dep_type": "parent"
@@ -219,11 +224,6 @@
     },
     {
       "from_id": "lb-x83f",
-      "to_id": "lb-riil",
-      "dep_type": "parent"
-    },
-    {
-      "from_id": "lb-9bsm",
       "to_id": "lb-riil",
       "dep_type": "parent"
     }
