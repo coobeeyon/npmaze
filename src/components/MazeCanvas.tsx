@@ -337,7 +337,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
         ref={canvasRef}
         className="maze-canvas"
         role="img"
-        aria-label={`${maze.config.rows} by ${maze.config.cols} maze on a ${maze.config.surface} surface${editMode ? ", edit mode active — click walls to toggle" : ""}`}
+        aria-label={`${maze.config.rows} by ${maze.config.cols} maze on a ${maze.config.surface} surface${editMode ? ", edit mode active — click walls to toggle" : placementMode ? `, placing ${placementMode} point — click a cell` : ""}`}
         tabIndex={0}
         style={{
           width: "100%",

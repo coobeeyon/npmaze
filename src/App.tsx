@@ -284,12 +284,12 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div className="header-pig">&#x1f439;</div>
+        <div className="header-pig" aria-label="Skinny pig" role="img">&#x1f439;</div>
         <div>
           <h1 className="header-title">Skinny Pig Maze</h1>
           <p className="header-subtitle">Non-planar maze generator</p>
         </div>
-        <button className="theme-toggle" onClick={toggleTheme} title="Toggle dark/light mode">
+        <button className="theme-toggle" onClick={toggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
           {theme === "light" ? "Dark" : "Light"}
         </button>
       </header>

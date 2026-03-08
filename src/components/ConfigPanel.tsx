@@ -174,6 +174,7 @@ export function ConfigPanel({
             className="config-select"
             style={{ flex: 1, fontFamily: "monospace", fontSize: "0.8rem" }}
             value={config.seed.toString(16).toUpperCase()}
+            aria-describedby="seed-desc"
             onChange={(e) => {
               const val = parseInt(e.target.value, 16);
               if (!isNaN(val)) {
@@ -182,7 +183,7 @@ export function ConfigPanel({
             }}
           />
         </div>
-        <span className="config-desc">
+        <span id="seed-desc" className="config-desc">
           Enter a hex seed to reproduce a maze
         </span>
       </div>
