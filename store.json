@@ -130,6 +130,16 @@
       "created_at": "2026-03-08T19:26:08.903056473Z",
       "updated_at": "2026-03-08T19:29:53.496351793Z"
     },
+    "lb-ilwf": {
+      "id": "lb-ilwf",
+      "title": "Improve ARIA labels and screen reader support",
+      "description": "Add aria-labels to theme toggle, pig emoji, canvas placement mode labels, seed input aria-describedby",
+      "item_type": "task",
+      "status": "open",
+      "priority": 1,
+      "created_at": "2026-03-08T21:44:04.347149545Z",
+      "updated_at": "2026-03-08T21:44:04.347149545Z"
+    },
     "lb-j8xf": {
       "id": "lb-j8xf",
       "title": "Zoom and pan for large mazes",
@@ -359,6 +369,11 @@
     },
     {
       "from_id": "lb-0j0f",
+      "to_id": "lb-ku28",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-ilwf",
       "to_id": "lb-ku28",
       "dep_type": "parent"
     }
