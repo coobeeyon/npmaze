@@ -1,10 +1,12 @@
 import type { MazeConfig, SurfaceType, AlgorithmType } from "../types";
+import type { PlacementMode } from "./MazeCanvas";
 
 interface ConfigPanelProps {
   config: MazeConfig;
   editMode: boolean;
   showSolution: boolean;
   animating: boolean;
+  placementMode: PlacementMode;
   onConfigChange: (config: MazeConfig) => void;
   onGenerate: () => void;
   onAnimate: () => void;
@@ -12,6 +14,7 @@ interface ConfigPanelProps {
   onToggleEdit: () => void;
   onToggleSolution: () => void;
   onExport: () => void;
+  onSetPlacement: (mode: PlacementMode) => void;
 }
 
 const SURFACES: { value: SurfaceType; label: string; desc: string }[] = [
@@ -40,6 +43,8 @@ export function ConfigPanel({
   onToggleEdit,
   onToggleSolution,
   onExport,
+  placementMode,
+  onSetPlacement,
 }: ConfigPanelProps) {
   return (
     <div className="config-panel" role="form" aria-label="Maze configuration">
@@ -155,6 +160,18 @@ export function ConfigPanel({
           onClick={onToggleSolution}
         >
           {showSolution ? "Hide Solution" : "Show Solution"}
+        </button>
+        <button
+          className={`btn ${placementMode === "start" ? "btn-active" : "btn-secondary"}`}
+          onClick={() => onSetPlacement(placementMode === "start" ? null : "start")}
+        >
+          {placementMode === "start" ? "Click a cell..." : "Set Start"}
+        </button>
+        <button
+          className={`btn ${placementMode === "end" ? "btn-active" : "btn-secondary"}`}
+          onClick={() => onSetPlacement(placementMode === "end" ? null : "end")}
+        >
+          {placementMode === "end" ? "Click a cell..." : "Set End"}
         </button>
         <button className="btn btn-secondary" onClick={onExport}>
           Export PNG

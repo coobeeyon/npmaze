@@ -1,15 +1,21 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import type { CellCoord, MazeState } from "../types";
-import { drawMaze, hitTestWall } from "../rendering/drawMaze";
+import { drawMaze, hitTestWall, hitTestCell } from "../rendering/drawMaze";
+
+export type PlacementMode = "start" | "end" | null;
 
 interface MazeCanvasProps {
   maze: MazeState;
   editMode: boolean;
   solutionPath: CellCoord[] | null;
+  start: CellCoord;
+  end: CellCoord;
+  placementMode: PlacementMode;
   onToggleWall: (wallKey: string) => void;
+  onPlaceCell: (cell: CellCoord) => void;
 }
 
-export function MazeCanvas({ maze, editMode, solutionPath, onToggleWall }: MazeCanvasProps) {
+export function MazeCanvas({ maze, editMode, solutionPath, start, end, placementMode, onToggleWall, onPlaceCell }: MazeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredWall, setHoveredWall] = useState<string | null>(null);
 
@@ -37,8 +43,8 @@ export function MazeCanvas({ maze, editMode, solutionPath, onToggleWall }: MazeC
       configurable: true,
     });
 
-    drawMaze(ctx, maze, editMode, hoveredWall, solutionPath);
-  }, [maze, editMode, hoveredWall, solutionPath]);
+    drawMaze(ctx, maze, editMode, hoveredWall, solutionPath, start, end);
+  }, [maze, editMode, hoveredWall, solutionPath, start, end]);
 
   useEffect(() => {
     redraw();
@@ -63,13 +69,20 @@ export function MazeCanvas({ maze, editMode, solutionPath, onToggleWall }: MazeC
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!editMode) return;
       const pos = getMousePos(e);
       if (!pos) return;
+
+      if (placementMode) {
+        const cell = hitTestCell(pos.x, pos.y, maze, pos.w, pos.h);
+        if (cell) onPlaceCell(cell);
+        return;
+      }
+
+      if (!editMode) return;
       const wk = hitTestWall(pos.x, pos.y, maze, pos.w, pos.h);
       if (wk) onToggleWall(wk);
     },
-    [editMode, maze, getMousePos, onToggleWall],
+    [editMode, placementMode, maze, getMousePos, onToggleWall, onPlaceCell],
   );
 
   const handleMouseMove = useCallback(
@@ -100,7 +113,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, onToggleWall }: MazeC
       style={{
         width: "100%",
         height: "100%",
-        cursor: editMode ? "pointer" : "default",
+        cursor: editMode || placementMode ? "crosshair" : "default",
       }}
       onClick={handleClick}
       onMouseMove={handleMouseMove}

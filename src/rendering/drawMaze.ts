@@ -298,6 +298,8 @@ export function drawMaze(
   editMode: boolean,
   hoveredWall: string | null,
   solutionPath: CellCoord[] | null = null,
+  start: CellCoord = { row: 0, col: 0 },
+  end: CellCoord = { row: maze.config.rows - 1, col: maze.config.cols - 1 },
 ) {
   const { config, walls } = maze;
   const topology = createTopology(config.surface, config.rows, config.cols);
@@ -321,12 +323,12 @@ export function drawMaze(
   );
 
   // Draw start and end
-  const startCx = offsetX + cellSize / 2;
-  const startCy = offsetY + cellSize / 2;
+  const startCx = offsetX + start.col * cellSize + cellSize / 2;
+  const startCy = offsetY + start.row * cellSize + cellSize / 2;
   drawPig(ctx, startCx, startCy, cellSize);
 
-  const endCx = offsetX + (config.cols - 1) * cellSize + cellSize / 2;
-  const endCy = offsetY + (config.rows - 1) * cellSize + cellSize / 2;
+  const endCx = offsetX + end.col * cellSize + cellSize / 2;
+  const endCy = offsetY + end.row * cellSize + cellSize / 2;
   drawCarrot(ctx, endCx, endCy, cellSize);
 
   // Draw walls (skip crossing cells — drawn separately)
@@ -441,10 +443,38 @@ export function drawMaze(
   drawWrapIndicators(ctx, topology, opts);
 }
 
+/** Hit test: given a click position, find which cell was clicked */
+export function hitTestCell(
+  x: number,
+  y: number,
+  maze: MazeState,
+  canvasWidth: number,
+  canvasHeight: number,
+): CellCoord | null {
+  const { config } = maze;
+  const maxCellW = (canvasWidth - 60) / config.cols;
+  const maxCellH = (canvasHeight - 60) / config.rows;
+  const cellSize = Math.floor(Math.min(maxCellW, maxCellH, 40));
+  const mazeW = cellSize * config.cols;
+  const mazeH = cellSize * config.rows;
+  const offsetX = Math.floor((canvasWidth - mazeW) / 2);
+  const offsetY = Math.floor((canvasHeight - mazeH) / 2);
+
+  const col = Math.floor((x - offsetX) / cellSize);
+  const row = Math.floor((y - offsetY) / cellSize);
+
+  if (row < 0 || row >= config.rows || col < 0 || col >= config.cols) {
+    return null;
+  }
+  return { row, col };
+}
+
 /** Export maze as PNG by drawing to an offscreen canvas at fixed resolution */
 export function exportMazePNG(
   maze: MazeState,
   solutionPath: CellCoord[] | null = null,
+  start?: CellCoord,
+  end?: CellCoord,
 ) {
   const { config } = maze;
   const cellSize = 30;
@@ -457,7 +487,7 @@ export function exportMazePNG(
   canvas.height = height;
   const ctx = canvas.getContext("2d")!;
 
-  drawMaze(ctx, maze, false, null, solutionPath);
+  drawMaze(ctx, maze, false, null, solutionPath, start, end);
 
   const link = document.createElement("a");
   link.download = `skinny-pig-maze-${config.rows}x${config.cols}.png`;

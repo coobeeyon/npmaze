@@ -4,7 +4,7 @@ import { createTopology } from "./maze/topology";
 import { generateMaze, generateMazeSteps } from "./maze/algorithms";
 import { createAllWalls } from "./maze/walls";
 import { solveMaze } from "./maze/solver";
-import { MazeCanvas } from "./components/MazeCanvas";
+import { MazeCanvas, type PlacementMode } from "./components/MazeCanvas";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { TopologyInfo } from "./components/TopologyInfo";
 import { exportMazePNG } from "./rendering/drawMaze";
@@ -30,15 +30,16 @@ export default function App() {
   const [editMode, setEditMode] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [animating, setAnimating] = useState(false);
+  const [start, setStart] = useState<CellCoord>({ row: 0, col: 0 });
+  const [end, setEnd] = useState<CellCoord>({ row: DEFAULT_CONFIG.rows - 1, col: DEFAULT_CONFIG.cols - 1 });
+  const [placementMode, setPlacementMode] = useState<PlacementMode>(null);
   const animationRef = useRef<number | null>(null);
 
   const solutionPath = useMemo<CellCoord[] | null>(() => {
     if (!showSolution) return null;
     const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
-    const start: CellCoord = { row: 0, col: 0 };
-    const end: CellCoord = { row: maze.config.rows - 1, col: maze.config.cols - 1 };
     return solveMaze(topology, maze.walls, start, end, maze.crossings);
-  }, [showSolution, maze]);
+  }, [showSolution, maze, start, end]);
 
   const stopAnimation = useCallback(() => {
     if (animationRef.current !== null) {
@@ -53,12 +54,18 @@ export default function App() {
     setMaze(createMaze(config));
     setEditMode(false);
     setShowSolution(false);
+    setStart({ row: 0, col: 0 });
+    setEnd({ row: config.rows - 1, col: config.cols - 1 });
+    setPlacementMode(null);
   }, [config, stopAnimation]);
 
   const handleAnimate = useCallback(() => {
     stopAnimation();
     setEditMode(false);
     setShowSolution(false);
+    setStart({ row: 0, col: 0 });
+    setEnd({ row: config.rows - 1, col: config.cols - 1 });
+    setPlacementMode(null);
 
     const topology = createTopology(config.surface, config.rows, config.cols);
     const allWalls = createAllWalls(topology);
@@ -115,8 +122,18 @@ export default function App() {
   }, [config, stopAnimation]);
 
   const handleExport = useCallback(() => {
-    exportMazePNG(maze, solutionPath);
-  }, [maze, solutionPath]);
+    exportMazePNG(maze, solutionPath, start, end);
+  }, [maze, solutionPath, start, end]);
+
+  const handlePlaceCell = useCallback((cell: CellCoord) => {
+    if (placementMode === "start") {
+      setStart(cell);
+    } else if (placementMode === "end") {
+      setEnd(cell);
+    }
+    setPlacementMode(null);
+    setShowSolution(false);
+  }, [placementMode]);
 
   const handleToggleWall = useCallback((wallKey: string) => {
     setMaze((prev) => {
@@ -155,6 +172,8 @@ export default function App() {
             onToggleEdit={() => setEditMode((e) => !e)}
             onToggleSolution={() => setShowSolution((s) => !s)}
             onExport={handleExport}
+            placementMode={placementMode}
+            onSetPlacement={setPlacementMode}
           />
           <TopologyInfo surface={config.surface} />
         </aside>
@@ -164,7 +183,11 @@ export default function App() {
             maze={maze}
             editMode={editMode}
             solutionPath={solutionPath}
+            start={start}
+            end={end}
+            placementMode={placementMode}
             onToggleWall={handleToggleWall}
+            onPlaceCell={handlePlaceCell}
           />
         </main>
       </div>
