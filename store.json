@@ -55,11 +55,10 @@
       "title": "Animated maze generation",
       "description": "Step-by-step animation of maze generation algorithm",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 3,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T17:18:46.734676223Z",
-      "updated_at": "2026-03-08T17:20:41.001034225Z"
+      "updated_at": "2026-03-08T17:21:59.061680689Z"
     },
     "lb-t8lw": {
       "id": "lb-t8lw",
