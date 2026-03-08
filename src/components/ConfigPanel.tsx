@@ -40,10 +40,11 @@ export function ConfigPanel({
   onToggleSolution,
 }: ConfigPanelProps) {
   return (
-    <div className="config-panel">
+    <div className="config-panel" role="form" aria-label="Maze configuration">
       <div className="config-section">
-        <label className="config-label">Surface</label>
+        <label className="config-label" htmlFor="surface-select">Surface</label>
         <select
+          id="surface-select"
           className="config-select"
           value={config.surface}
           onChange={(e) =>

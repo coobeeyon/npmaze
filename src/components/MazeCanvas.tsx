@@ -94,6 +94,9 @@ export function MazeCanvas({ maze, editMode, solutionPath, onToggleWall }: MazeC
     <canvas
       ref={canvasRef}
       className="maze-canvas"
+      role="img"
+      aria-label={`${maze.config.rows} by ${maze.config.cols} maze on a ${maze.config.surface} surface${editMode ? ", edit mode active — click walls to toggle" : ""}`}
+      tabIndex={0}
       style={{
         width: "100%",
         height: "100%",
