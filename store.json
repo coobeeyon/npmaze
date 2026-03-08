@@ -145,11 +145,10 @@
       "title": "Maze difficulty scoring",
       "description": "Calculate and display maze difficulty based on solution path length ratio, decision points, dead-end ratio",
       "item_type": "feature",
-      "status": "open",
+      "status": "closed",
       "priority": 2,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T19:12:56.920632083Z",
-      "updated_at": "2026-03-08T19:18:02.045125452Z"
+      "updated_at": "2026-03-08T19:19:07.929157040Z"
     }
   },
   "deps": [
