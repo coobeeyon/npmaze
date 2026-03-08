@@ -225,11 +225,10 @@
       "title": "Dark mode toggle",
       "description": "Add a dark/light theme toggle. Create dark color palette and persist preference in localStorage.",
       "item_type": "feature",
-      "status": "open",
+      "status": "closed",
       "priority": 2,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T19:35:30.745343705Z",
-      "updated_at": "2026-03-08T19:36:45.769187833Z"
+      "updated_at": "2026-03-08T19:39:32.782517312Z"
     },
     "lb-zvha": {
       "id": "lb-zvha",
