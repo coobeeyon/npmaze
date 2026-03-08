@@ -323,6 +323,71 @@
   outline-offset: 1px;
 }
 
+/* Shortcut help */
+.shortcut-help {
+  margin-top: 16px;
+}
+
+.shortcut-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--pig-tan, #D2B48C);
+  border-radius: 8px;
+  background: var(--cell-bg, #FFFAF5);
+  color: var(--text-light, #8D6E63);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.shortcut-toggle:hover {
+  background: var(--bg-secondary, #FAEBD7);
+}
+
+.shortcut-toggle:focus-visible {
+  outline: 2px solid var(--accent, #D4886B);
+  outline-offset: 1px;
+}
+
+.shortcut-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shortcut-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shortcut-kbd {
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Code", monospace;
+  font-size: 0.75rem;
+  padding: 1px 5px;
+  border: 1px solid var(--pig-tan, #D2B48C);
+  border-radius: 4px;
+  background: var(--bg-primary, #FFF5EE);
+  color: var(--text, #5D4037);
+  display: inline-block;
+  width: fit-content;
+}
+
+.shortcut-desc {
+  font-size: 0.75rem;
+  color: var(--text-light, #8D6E63);
+}
+
+.shortcut-context {
+  font-style: italic;
+  opacity: 0.8;
+}
+
 /* Print styles */
 @media print {
   .app-header,

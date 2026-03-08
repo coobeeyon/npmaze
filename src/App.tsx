@@ -8,6 +8,7 @@ import { MazeCanvas, type PlacementMode } from "./components/MazeCanvas";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { TopologyInfo } from "./components/TopologyInfo";
 import { DifficultyPanel } from "./components/DifficultyPanel";
+import { ShortcutHelp } from "./components/ShortcutHelp";
 import { exportMazePNG, exportMazeSVG } from "./rendering/drawMaze";
 import { scoreDifficulty } from "./maze/difficulty";
 import { mulberry32, randomSeed } from "./maze/rng";
@@ -388,6 +389,7 @@ export default function App() {
           />
           <TopologyInfo surface={config.surface} />
           <DifficultyPanel score={difficulty} />
+          <ShortcutHelp />
         </aside>
 
         <main className="maze-container">
