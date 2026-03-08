@@ -13,9 +13,10 @@ interface MazeCanvasProps {
   placementMode: PlacementMode;
   onToggleWall: (wallKey: string) => void;
   onPlaceCell: (cell: CellCoord) => void;
+  exploredCells?: Set<string> | null;
 }
 
-export function MazeCanvas({ maze, editMode, solutionPath, start, end, placementMode, onToggleWall, onPlaceCell }: MazeCanvasProps) {
+export function MazeCanvas({ maze, editMode, solutionPath, start, end, placementMode, onToggleWall, onPlaceCell, exploredCells = null }: MazeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredWall, setHoveredWall] = useState<string | null>(null);
 
@@ -43,8 +44,8 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
       configurable: true,
     });
 
-    drawMaze(ctx, maze, editMode, hoveredWall, solutionPath, start, end);
-  }, [maze, editMode, hoveredWall, solutionPath, start, end]);
+    drawMaze(ctx, maze, editMode, hoveredWall, solutionPath, start, end, exploredCells);
+  }, [maze, editMode, hoveredWall, solutionPath, start, end, exploredCells]);
 
   useEffect(() => {
     redraw();

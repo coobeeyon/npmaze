@@ -15,6 +15,9 @@ interface ConfigPanelProps {
   onToggleSolution: () => void;
   onExport: () => void;
   onSetPlacement: (mode: PlacementMode) => void;
+  solvingAnimating: boolean;
+  onAnimateSolve: () => void;
+  onStopSolverAnimation: () => void;
 }
 
 const SURFACES: { value: SurfaceType; label: string; desc: string }[] = [
@@ -51,6 +54,9 @@ export function ConfigPanel({
   onExport,
   placementMode,
   onSetPlacement,
+  solvingAnimating,
+  onAnimateSolve,
+  onStopSolverAnimation,
 }: ConfigPanelProps) {
   return (
     <div className="config-panel" role="form" aria-label="Maze configuration">
@@ -181,6 +187,12 @@ export function ConfigPanel({
           onClick={onToggleSolution}
         >
           {showSolution ? "Hide Solution" : "Show Solution"}
+        </button>
+        <button
+          className={`btn ${solvingAnimating ? "btn-active" : "btn-secondary"}`}
+          onClick={solvingAnimating ? onStopSolverAnimation : onAnimateSolve}
+        >
+          {solvingAnimating ? "Stop Solving" : "Animate Solve"}
         </button>
         <button
           className={`btn ${placementMode === "start" ? "btn-active" : "btn-secondary"}`}

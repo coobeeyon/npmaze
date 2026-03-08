@@ -3,7 +3,7 @@ import type { CellCoord, MazeConfig, MazeState } from "./types";
 import { createTopology } from "./maze/topology";
 import { generateMaze, generateMazeSteps } from "./maze/algorithms";
 import { createAllWalls } from "./maze/walls";
-import { solveMaze } from "./maze/solver";
+import { solveMaze, solveMazeSteps } from "./maze/solver";
 import { MazeCanvas, type PlacementMode } from "./components/MazeCanvas";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { TopologyInfo } from "./components/TopologyInfo";
@@ -35,7 +35,10 @@ export default function App() {
   const [start, setStart] = useState<CellCoord>({ row: 0, col: 0 });
   const [end, setEnd] = useState<CellCoord>({ row: DEFAULT_CONFIG.rows - 1, col: DEFAULT_CONFIG.cols - 1 });
   const [placementMode, setPlacementMode] = useState<PlacementMode>(null);
+  const [solvingAnimating, setSolvingAnimating] = useState(false);
+  const [exploredCells, setExploredCells] = useState<Set<string> | null>(null);
   const animationRef = useRef<number | null>(null);
+  const solverAnimationRef = useRef<number | null>(null);
 
   const solutionPath = useMemo<CellCoord[] | null>(() => {
     if (!showSolution) return null;
@@ -57,20 +60,32 @@ export default function App() {
     setAnimating(false);
   }, []);
 
+  const stopSolverAnimation = useCallback(() => {
+    if (solverAnimationRef.current !== null) {
+      cancelAnimationFrame(solverAnimationRef.current);
+      solverAnimationRef.current = null;
+    }
+    setSolvingAnimating(false);
+  }, []);
+
   const handleGenerate = useCallback(() => {
     stopAnimation();
+    stopSolverAnimation();
     setMaze(createMaze(config));
     setEditMode(false);
     setShowSolution(false);
+    setExploredCells(null);
     setStart({ row: 0, col: 0 });
     setEnd({ row: config.rows - 1, col: config.cols - 1 });
     setPlacementMode(null);
-  }, [config, stopAnimation]);
+  }, [config, stopAnimation, stopSolverAnimation]);
 
   const handleAnimate = useCallback(() => {
     stopAnimation();
+    stopSolverAnimation();
     setEditMode(false);
     setShowSolution(false);
+    setExploredCells(null);
     setStart({ row: 0, col: 0 });
     setEnd({ row: config.rows - 1, col: config.cols - 1 });
     setPlacementMode(null);
@@ -127,7 +142,65 @@ export default function App() {
     }
 
     animationRef.current = requestAnimationFrame(step);
-  }, [config, stopAnimation]);
+  }, [config, stopAnimation, stopSolverAnimation]);
+
+  const handleAnimateSolve = useCallback(() => {
+    stopSolverAnimation();
+    setShowSolution(false);
+    setExploredCells(new Set());
+
+    const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
+    const gen = solveMazeSteps(topology, maze.walls, start, end, maze.crossings);
+
+    setSolvingAnimating(true);
+
+    const stepsPerFrame = Math.max(1, Math.floor((maze.config.rows * maze.config.cols) / 200));
+    let lastTime = 0;
+    const frameDelay = 16;
+
+    function step(timestamp: number) {
+      if (timestamp - lastTime < frameDelay) {
+        solverAnimationRef.current = requestAnimationFrame(step);
+        return;
+      }
+      lastTime = timestamp;
+
+      const newCells: CellCoord[] = [];
+      for (let i = 0; i < stepsPerFrame; i++) {
+        const result = gen.next();
+        if (result.done) {
+          setSolvingAnimating(false);
+          solverAnimationRef.current = null;
+          return;
+        }
+        newCells.push(result.value.cell);
+        if (result.value.done) {
+          // Final step — show the path
+          setExploredCells((prev) => {
+            const next = new Set(prev);
+            for (const c of newCells) next.add(`${c.row},${c.col}`);
+            return next;
+          });
+          if (result.value.path) {
+            setShowSolution(true);
+          }
+          setSolvingAnimating(false);
+          solverAnimationRef.current = null;
+          return;
+        }
+      }
+
+      setExploredCells((prev) => {
+        const next = new Set(prev);
+        for (const c of newCells) next.add(`${c.row},${c.col}`);
+        return next;
+      });
+
+      solverAnimationRef.current = requestAnimationFrame(step);
+    }
+
+    solverAnimationRef.current = requestAnimationFrame(step);
+  }, [maze, start, end, stopSolverAnimation]);
 
   const handleExport = useCallback(() => {
     exportMazePNG(maze, solutionPath, start, end);
@@ -182,6 +255,9 @@ export default function App() {
             onExport={handleExport}
             placementMode={placementMode}
             onSetPlacement={setPlacementMode}
+            solvingAnimating={solvingAnimating}
+            onAnimateSolve={handleAnimateSolve}
+            onStopSolverAnimation={stopSolverAnimation}
           />
           <TopologyInfo surface={config.surface} />
           <DifficultyPanel score={difficulty} />
@@ -197,6 +273,7 @@ export default function App() {
             placementMode={placementMode}
             onToggleWall={handleToggleWall}
             onPlaceCell={handlePlaceCell}
+            exploredCells={exploredCells}
           />
         </main>
       </div>

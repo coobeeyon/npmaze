@@ -31,6 +31,9 @@ export const COLORS = {
   buttonBg: "#D4886B",
   buttonText: "#FFF5EE",
 
+  // Solver animation
+  explored: "#F0D4C4", // warm peach for explored cells
+
   // Start/end
   startColor: "#F4C2C2",
   endColor: "#FF8A65", // carrot orange

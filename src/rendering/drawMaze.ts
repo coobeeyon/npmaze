@@ -300,6 +300,7 @@ export function drawMaze(
   solutionPath: CellCoord[] | null = null,
   start: CellCoord = { row: 0, col: 0 },
   end: CellCoord = { row: maze.config.rows - 1, col: maze.config.cols - 1 },
+  exploredCells: Set<string> | null = null,
 ) {
   const { config, walls } = maze;
   const topology = createTopology(config.surface, config.rows, config.cols);
@@ -321,6 +322,23 @@ export function drawMaze(
     cellSize * config.cols,
     cellSize * config.rows,
   );
+
+  // Draw explored cells (solver animation)
+  if (exploredCells && exploredCells.size > 0) {
+    ctx.fillStyle = COLORS.explored;
+    for (let row = 0; row < config.rows; row++) {
+      for (let col = 0; col < config.cols; col++) {
+        if (exploredCells.has(`${row},${col}`)) {
+          ctx.fillRect(
+            offsetX + col * cellSize,
+            offsetY + row * cellSize,
+            cellSize,
+            cellSize,
+          );
+        }
+      }
+    }
+  }
 
   // Draw start and end
   const startCx = offsetX + start.col * cellSize + cellSize / 2;
