@@ -75,11 +75,10 @@
       "title": "Implement 2D non-planar crossings (weave maze)",
       "description": "Implement 2D weave mazes where paths can cross over/under each other within a single grid cell. See SPEC.md for updated requirements and theme details (skinny pigs = hairless guinea pigs).",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 0,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T18:59:16.214064951Z",
-      "updated_at": "2026-03-08T19:03:31.437908355Z"
+      "updated_at": "2026-03-08T19:09:50.164710994Z"
     },
     "lb-voc2": {
       "id": "lb-voc2",
