@@ -4,6 +4,7 @@ import { createTopology } from "./maze/topology";
 import { generateMaze } from "./maze/algorithms";
 import { MazeCanvas } from "./components/MazeCanvas";
 import { ConfigPanel } from "./components/ConfigPanel";
+import { TopologyInfo } from "./components/TopologyInfo";
 import "./App.css";
 
 const DEFAULT_CONFIG: MazeConfig = {
@@ -60,6 +61,7 @@ export default function App() {
             onGenerate={handleGenerate}
             onToggleEdit={() => setEditMode((e) => !e)}
           />
+          <TopologyInfo surface={config.surface} />
         </aside>
 
         <main className="maze-container">
