@@ -365,7 +365,8 @@
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--pig-tan, #D2B48C);
-    max-height: 200px;
+    max-height: 40vh;
+    overflow-y: auto;
   }
 
   .config-panel {
@@ -377,5 +378,17 @@
   .config-section {
     flex: 1;
     min-width: 120px;
+  }
+
+  .config-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .config-buttons .btn {
+    flex: 1;
+    min-width: 100px;
+    padding: 8px 10px;
+    font-size: 0.8rem;
   }
 }
