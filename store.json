@@ -64,10 +64,10 @@
       "id": "lb-3pqw",
       "title": "Implement weave maze generation per spec",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 2,
       "created_at": "2026-03-08T22:05:53.408446351Z",
-      "updated_at": "2026-03-08T22:05:53.408446351Z"
+      "updated_at": "2026-03-08T22:07:56.652205805Z"
     },
     "lb-5q15": {
       "id": "lb-5q15",
