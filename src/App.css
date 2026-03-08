@@ -134,7 +134,18 @@
   transition: background 0.15s, transform 0.1s;
 }
 
-.btn:active {
+.btn:focus-visible {
+  outline: 2px solid var(--accent, #D4886B);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn:active:not(:disabled) {
   transform: scale(0.97);
 }
 
@@ -179,6 +190,11 @@
 .maze-canvas {
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(93, 64, 55, 0.1);
+}
+
+.maze-canvas:focus-visible {
+  outline: 2px solid var(--accent, #D4886B);
+  outline-offset: 2px;
 }
 
 /* Topology Info */
@@ -237,6 +253,11 @@
   background: var(--bg-secondary, #FAEBD7);
 }
 
+.btn-preset:focus-visible {
+  outline: 2px solid var(--accent, #D4886B);
+  outline-offset: 1px;
+}
+
 /* Difficulty bar */
 .difficulty-bar {
   height: 8px;
@@ -274,6 +295,11 @@
   background: var(--bg-secondary, #FAEBD7);
 }
 
+.reset-view-btn:focus-visible {
+  outline: 2px solid var(--accent, #D4886B);
+  outline-offset: 1px;
+}
+
 /* Theme toggle */
 .theme-toggle {
   margin-left: auto;
@@ -290,6 +316,11 @@
 
 .theme-toggle:hover {
   background: var(--bg-secondary, #FAEBD7);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent, #D4886B);
+  outline-offset: 1px;
 }
 
 /* Responsive */
