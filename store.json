@@ -124,11 +124,10 @@
       "title": "Add SVG export option",
       "description": "Add SVG export alongside PNG. SVG gives better print quality and infinite scalability. Render maze to SVG string and trigger download.",
       "item_type": "feature",
-      "status": "open",
+      "status": "closed",
       "priority": 3,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T22:27:21.908638416Z",
-      "updated_at": "2026-03-08T22:28:14.983184146Z"
+      "updated_at": "2026-03-08T22:30:16.961423508Z"
     },
     "lb-9ah2": {
       "id": "lb-9ah2",
