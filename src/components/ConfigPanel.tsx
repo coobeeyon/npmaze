@@ -238,6 +238,9 @@ export function ConfigPanel({
         <button className="btn btn-secondary" onClick={onCopyLink}>
           {linkCopied ? "Link Copied!" : "Copy Link"}
         </button>
+        <button className="btn btn-secondary" onClick={() => window.print()}>
+          Print
+        </button>
       </div>
     </div>
   );
