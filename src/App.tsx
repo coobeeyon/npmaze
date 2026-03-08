@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import type { CellCoord, MazeConfig, MazeState } from "./types";
 import { createTopology } from "./maze/topology";
 import { generateMaze, generateMazeSteps } from "./maze/algorithms";
@@ -39,6 +39,8 @@ export default function App() {
   const [exploredCells, setExploredCells] = useState<Set<string> | null>(null);
   const animationRef = useRef<number | null>(null);
   const solverAnimationRef = useRef<number | null>(null);
+  const editHistoryRef = useRef<string[]>([]);
+  const editRedoRef = useRef<string[]>([]);
 
   const solutionPath = useMemo<CellCoord[] | null>(() => {
     if (!showSolution) return null;
@@ -75,6 +77,8 @@ export default function App() {
     setEditMode(false);
     setShowSolution(false);
     setExploredCells(null);
+    editHistoryRef.current = [];
+    editRedoRef.current = [];
     setStart({ row: 0, col: 0 });
     setEnd({ row: config.rows - 1, col: config.cols - 1 });
     setPlacementMode(null);
@@ -216,18 +220,54 @@ export default function App() {
     setShowSolution(false);
   }, [placementMode]);
 
-  const handleToggleWall = useCallback((wallKey: string) => {
+  const toggleWall = useCallback((wk: string) => {
     setMaze((prev) => {
       const newWalls = new Set(prev.walls);
-      if (newWalls.has(wallKey)) {
-        newWalls.delete(wallKey);
+      if (newWalls.has(wk)) {
+        newWalls.delete(wk);
       } else {
-        newWalls.add(wallKey);
+        newWalls.add(wk);
       }
       return { ...prev, walls: newWalls };
     });
     setShowSolution(false);
   }, []);
+
+  const handleToggleWall = useCallback((wk: string) => {
+    editHistoryRef.current.push(wk);
+    editRedoRef.current = [];
+    toggleWall(wk);
+  }, [toggleWall]);
+
+  const handleUndo = useCallback(() => {
+    const wk = editHistoryRef.current.pop();
+    if (!wk) return;
+    editRedoRef.current.push(wk);
+    toggleWall(wk);
+  }, [toggleWall]);
+
+  const handleRedo = useCallback(() => {
+    const wk = editRedoRef.current.pop();
+    if (!wk) return;
+    editHistoryRef.current.push(wk);
+    toggleWall(wk);
+  }, [toggleWall]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (!editMode) return;
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if (mod && (e.key === "Z" || (e.key === "z" && e.shiftKey) || e.key === "y")) {
+        e.preventDefault();
+        handleRedo();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editMode, handleUndo, handleRedo]);
 
   return (
     <div className="app">
