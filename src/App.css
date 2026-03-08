@@ -1,0 +1,193 @@
+/* Skinny Pig Maze - Main Styles */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #FFF5EE;
+  color: #5D4037;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #FAEBD7, #FFF0E6);
+  border-bottom: 2px solid #D2B48C;
+  flex-shrink: 0;
+}
+
+.header-pig {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.header-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #5D4037;
+}
+
+.header-subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #8D6E63;
+}
+
+/* Body layout */
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  padding: 16px;
+  background: #FFF0E6;
+  border-right: 1px solid #D2B48C;
+  overflow-y: auto;
+}
+
+/* Config Panel */
+.config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8D6E63;
+}
+
+.config-desc {
+  font-size: 0.75rem;
+  color: #8D6E63;
+  font-style: italic;
+}
+
+.config-select {
+  padding: 6px 8px;
+  border: 1px solid #D2B48C;
+  border-radius: 6px;
+  background: #FFFAF5;
+  color: #5D4037;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.config-select:focus {
+  outline: 2px solid #D4886B;
+  outline-offset: 1px;
+}
+
+.config-slider {
+  width: 100%;
+  accent-color: #D4886B;
+  cursor: pointer;
+}
+
+.config-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: #D4886B;
+  color: #FFF5EE;
+}
+
+.btn-primary:hover {
+  background: #C47A5E;
+}
+
+.btn-secondary {
+  background: #FAEBD7;
+  color: #5D4037;
+  border: 1px solid #D2B48C;
+}
+
+.btn-secondary:hover {
+  background: #F4E0CC;
+}
+
+.btn-active {
+  background: #5D4037;
+  color: #FFF5EE;
+}
+
+.btn-active:hover {
+  background: #4E342E;
+}
+
+/* Maze container */
+.maze-container {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.maze-canvas {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(93, 64, 55, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .app-body {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #D2B48C;
+    max-height: 200px;
+  }
+
+  .config-panel {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .config-section {
+    flex: 1;
+    min-width: 120px;
+  }
+}
