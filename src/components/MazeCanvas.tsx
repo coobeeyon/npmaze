@@ -25,6 +25,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const didDrag = useRef(false);
+  const touchRef = useRef<{ startX: number; startY: number; startPanX: number; startPanY: number; pinchDist: number; pinchZoom: number; pinchCenterX: number; pinchCenterY: number } | null>(null);
 
   // Reset zoom/pan when maze config changes
   const prevConfigRef = useRef(maze.config);
@@ -213,6 +214,115 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
     return () => canvas.removeEventListener("wheel", handleWheel);
   }, []);
 
+  // Touch support: single-touch pan/tap, two-finger pinch-to-zoom
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    function getTouchDist(t1: Touch, t2: Touch) {
+      return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+    }
+
+    function handleTouchStart(e: TouchEvent) {
+      e.preventDefault();
+      const rect = canvas!.getBoundingClientRect();
+
+      if (e.touches.length === 2) {
+        // Pinch start
+        const dist = getTouchDist(e.touches[0], e.touches[1]);
+        const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+        const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+        touchRef.current = {
+          startX: cx, startY: cy,
+          startPanX: panX, startPanY: panY,
+          pinchDist: dist, pinchZoom: zoom,
+          pinchCenterX: cx, pinchCenterY: cy,
+        };
+        didDrag.current = true; // suppress tap
+      } else if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        touchRef.current = {
+          startX: touch.clientX, startY: touch.clientY,
+          startPanX: panX, startPanY: panY,
+          pinchDist: 0, pinchZoom: zoom,
+          pinchCenterX: 0, pinchCenterY: 0,
+        };
+        didDrag.current = false;
+      }
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      e.preventDefault();
+      if (!touchRef.current) return;
+
+      if (e.touches.length === 2) {
+        // Pinch zoom
+        const dist = getTouchDist(e.touches[0], e.touches[1]);
+        const rect = canvas!.getBoundingClientRect();
+        const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+        const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+
+        const scale = dist / touchRef.current.pinchDist;
+        const newZoom = Math.min(Math.max(touchRef.current.pinchZoom * scale, 0.25), 10);
+        const zoomRatio = newZoom / touchRef.current.pinchZoom;
+
+        // Zoom centered on pinch midpoint, plus pan delta
+        const origCX = touchRef.current.pinchCenterX;
+        const origCY = touchRef.current.pinchCenterY;
+        const newPanX = cx - zoomRatio * (origCX - touchRef.current.startPanX);
+        const newPanY = cy - zoomRatio * (origCY - touchRef.current.startPanY);
+
+        setZoom(newZoom);
+        setPanX(newPanX);
+        setPanY(newPanY);
+        didDrag.current = true;
+      } else if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - touchRef.current.startX;
+        const dy = touch.clientY - touchRef.current.startY;
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+          didDrag.current = true;
+        }
+        setPanX(touchRef.current.startPanX + dx);
+        setPanY(touchRef.current.startPanY + dy);
+      }
+    }
+
+    function handleTouchEnd(e: TouchEvent) {
+      e.preventDefault();
+      if (e.touches.length === 0 && !didDrag.current && touchRef.current) {
+        // Tap — simulate click at touch position
+        const rect = canvas!.getBoundingClientRect();
+        const screenX = touchRef.current.startX - rect.left;
+        const screenY = touchRef.current.startY - rect.top;
+        const virtualW = rect.width / zoom;
+        const virtualH = rect.height / zoom;
+        const x = (screenX - panX) / zoom;
+        const y = (screenY - panY) / zoom;
+
+        if (placementMode) {
+          const cell = hitTestCell(x, y, maze, virtualW, virtualH);
+          if (cell) onPlaceCell(cell);
+        } else if (editMode) {
+          const wk = hitTestWall(x, y, maze, virtualW, virtualH);
+          if (wk) onToggleWall(wk);
+        }
+      }
+      if (e.touches.length === 0) {
+        touchRef.current = null;
+      }
+    }
+
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+    return () => {
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [zoom, panX, panY, editMode, placementMode, maze, onToggleWall, onPlaceCell]);
+
   const handleResetView = useCallback(() => {
     setZoom(1);
     setPanX(0);
@@ -232,6 +342,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
         style={{
           width: "100%",
           height: "100%",
+          touchAction: "none",
           cursor: isPanning.current
             ? "grabbing"
             : editMode || placementMode
