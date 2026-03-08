@@ -189,6 +189,7 @@ export function drawMaze(
   maze: MazeState,
   editMode: boolean,
   hoveredWall: string | null,
+  solutionPath: CellCoord[] | null = null,
 ) {
   const { config, walls } = maze;
   const topology = createTopology(config.surface, config.rows, config.cols);
@@ -286,6 +287,39 @@ export function drawMaze(
         ctx.stroke();
       }
     }
+  }
+
+  // Draw solution path
+  if (solutionPath && solutionPath.length > 1) {
+    ctx.strokeStyle = COLORS.accent;
+    ctx.lineWidth = Math.max(cellSize * 0.15, 2);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    for (let i = 0; i < solutionPath.length; i++) {
+      const cell = solutionPath[i];
+      const cx = offsetX + cell.col * cellSize + cellSize / 2;
+      const cy = offsetY + cell.row * cellSize + cellSize / 2;
+      if (i === 0) {
+        ctx.moveTo(cx, cy);
+      } else {
+        // Check if this is a wrap (big jump in grid position)
+        const prev = solutionPath[i - 1];
+        const dr = Math.abs(cell.row - prev.row);
+        const dc = Math.abs(cell.col - prev.col);
+        if (dr > 1 || dc > 1) {
+          // Wrap — draw a new sub-path segment
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+        } else {
+          ctx.lineTo(cx, cy);
+        }
+      }
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
   }
 
   // Draw wrap indicators

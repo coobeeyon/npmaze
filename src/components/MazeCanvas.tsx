@@ -1,14 +1,15 @@
 import { useRef, useEffect, useCallback, useState } from "react";
-import type { MazeState } from "../types";
+import type { CellCoord, MazeState } from "../types";
 import { drawMaze, hitTestWall } from "../rendering/drawMaze";
 
 interface MazeCanvasProps {
   maze: MazeState;
   editMode: boolean;
+  solutionPath: CellCoord[] | null;
   onToggleWall: (wallKey: string) => void;
 }
 
-export function MazeCanvas({ maze, editMode, onToggleWall }: MazeCanvasProps) {
+export function MazeCanvas({ maze, editMode, solutionPath, onToggleWall }: MazeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredWall, setHoveredWall] = useState<string | null>(null);
 
@@ -36,8 +37,8 @@ export function MazeCanvas({ maze, editMode, onToggleWall }: MazeCanvasProps) {
       configurable: true,
     });
 
-    drawMaze(ctx, maze, editMode, hoveredWall);
-  }, [maze, editMode, hoveredWall]);
+    drawMaze(ctx, maze, editMode, hoveredWall, solutionPath);
+  }, [maze, editMode, hoveredWall, solutionPath]);
 
   useEffect(() => {
     redraw();

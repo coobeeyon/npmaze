@@ -3,9 +3,11 @@ import type { MazeConfig, SurfaceType, AlgorithmType } from "../types";
 interface ConfigPanelProps {
   config: MazeConfig;
   editMode: boolean;
+  showSolution: boolean;
   onConfigChange: (config: MazeConfig) => void;
   onGenerate: () => void;
   onToggleEdit: () => void;
+  onToggleSolution: () => void;
 }
 
 const SURFACES: { value: SurfaceType; label: string; desc: string }[] = [
@@ -25,9 +27,11 @@ const ALGORITHMS: { value: AlgorithmType; label: string }[] = [
 export function ConfigPanel({
   config,
   editMode,
+  showSolution,
   onConfigChange,
   onGenerate,
   onToggleEdit,
+  onToggleSolution,
 }: ConfigPanelProps) {
   return (
     <div className="config-panel">
@@ -112,6 +116,12 @@ export function ConfigPanel({
           onClick={onToggleEdit}
         >
           {editMode ? "Exit Edit" : "Edit Walls"}
+        </button>
+        <button
+          className={`btn ${showSolution ? "btn-active" : "btn-secondary"}`}
+          onClick={onToggleSolution}
+        >
+          {showSolution ? "Hide Solution" : "Show Solution"}
         </button>
       </div>
     </div>

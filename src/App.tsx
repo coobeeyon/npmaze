@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
-import type { MazeConfig, MazeState } from "./types";
+import { useState, useCallback, useMemo } from "react";
+import type { CellCoord, MazeConfig, MazeState } from "./types";
 import { createTopology } from "./maze/topology";
 import { generateMaze } from "./maze/algorithms";
+import { solveMaze } from "./maze/solver";
 import { MazeCanvas } from "./components/MazeCanvas";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { TopologyInfo } from "./components/TopologyInfo";
@@ -24,10 +25,20 @@ export default function App() {
   const [config, setConfig] = useState<MazeConfig>(DEFAULT_CONFIG);
   const [maze, setMaze] = useState<MazeState>(() => createMaze(DEFAULT_CONFIG));
   const [editMode, setEditMode] = useState(false);
+  const [showSolution, setShowSolution] = useState(false);
+
+  const solutionPath = useMemo<CellCoord[] | null>(() => {
+    if (!showSolution) return null;
+    const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
+    const start: CellCoord = { row: 0, col: 0 };
+    const end: CellCoord = { row: maze.config.rows - 1, col: maze.config.cols - 1 };
+    return solveMaze(topology, maze.walls, start, end);
+  }, [showSolution, maze]);
 
   const handleGenerate = useCallback(() => {
     setMaze(createMaze(config));
     setEditMode(false);
+    setShowSolution(false);
   }, [config]);
 
   const handleToggleWall = useCallback((wallKey: string) => {
@@ -40,6 +51,7 @@ export default function App() {
       }
       return { ...prev, walls: newWalls };
     });
+    setShowSolution(false);
   }, []);
 
   return (
@@ -57,9 +69,11 @@ export default function App() {
           <ConfigPanel
             config={config}
             editMode={editMode}
+            showSolution={showSolution}
             onConfigChange={setConfig}
             onGenerate={handleGenerate}
             onToggleEdit={() => setEditMode((e) => !e)}
+            onToggleSolution={() => setShowSolution((s) => !s)}
           />
           <TopologyInfo surface={config.surface} />
         </aside>
@@ -68,6 +82,7 @@ export default function App() {
           <MazeCanvas
             maze={maze}
             editMode={editMode}
+            solutionPath={solutionPath}
             onToggleWall={handleToggleWall}
           />
         </main>
