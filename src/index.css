@@ -9,7 +9,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   font-family: system-ui, -apple-system, sans-serif;
-  background: #FFF5EE;
+  background: var(--bg-primary, #FFF5EE);
 }
 
 #root {

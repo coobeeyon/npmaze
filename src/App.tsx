@@ -10,6 +10,7 @@ import { TopologyInfo } from "./components/TopologyInfo";
 import { DifficultyPanel } from "./components/DifficultyPanel";
 import { exportMazePNG } from "./rendering/drawMaze";
 import { scoreDifficulty } from "./maze/difficulty";
+import { useTheme } from "./theme/useTheme";
 import "./App.css";
 
 const DEFAULT_CONFIG: MazeConfig = {
@@ -41,6 +42,7 @@ export default function App() {
   const solverAnimationRef = useRef<number | null>(null);
   const editHistoryRef = useRef<string[]>([]);
   const editRedoRef = useRef<string[]>([]);
+  const { theme, toggleTheme } = useTheme();
 
   const solutionPath = useMemo<CellCoord[] | null>(() => {
     if (!showSolution) return null;
@@ -277,6 +279,9 @@ export default function App() {
           <h1 className="header-title">Skinny Pig Maze</h1>
           <p className="header-subtitle">Non-planar maze generator</p>
         </div>
+        <button className="theme-toggle" onClick={toggleTheme} title="Toggle dark/light mode">
+          {theme === "light" ? "Dark" : "Light"}
+        </button>
       </header>
 
       <div className="app-body">
@@ -305,6 +310,7 @@ export default function App() {
 
         <main className="maze-container">
           <MazeCanvas
+            key={theme}
             maze={maze}
             editMode={editMode}
             solutionPath={solutionPath}
