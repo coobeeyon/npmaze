@@ -29,6 +29,16 @@
       "priority": 1,
       "created_at": "2026-03-08T17:12:45.795078368Z",
       "updated_at": "2026-03-08T17:12:45.795078368Z"
+    },
+    "lb-voc2": {
+      "id": "lb-voc2",
+      "title": "Edit mode + additional algorithms",
+      "description": "Wall toggle editing, Kruskal's, Prim's algorithms",
+      "item_type": "feature",
+      "status": "open",
+      "priority": 2,
+      "created_at": "2026-03-08T17:12:45.842899385Z",
+      "updated_at": "2026-03-08T17:12:45.842899385Z"
     }
   },
   "deps": [
@@ -39,6 +49,11 @@
     },
     {
       "from_id": "lb-2ejg",
+      "to_id": "lb-l7l1",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-voc2",
       "to_id": "lb-l7l1",
       "dep_type": "parent"
     }
