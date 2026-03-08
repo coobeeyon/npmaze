@@ -25,6 +25,12 @@ const SURFACES: { value: SurfaceType; label: string; desc: string }[] = [
   { value: "klein", label: "Klein Bottle", desc: "Left-right flip + top-bottom wrap" },
 ];
 
+const SIZE_PRESETS: { label: string; rows: number; cols: number }[] = [
+  { label: "Small", rows: 8, cols: 10 },
+  { label: "Medium", rows: 16, cols: 20 },
+  { label: "Large", rows: 30, cols: 40 },
+];
+
 const ALGORITHMS: { value: AlgorithmType; label: string }[] = [
   { value: "dfs", label: "Recursive Backtracker" },
   { value: "kruskal", label: "Kruskal's" },
@@ -99,6 +105,21 @@ export function ConfigPanel({
             onConfigChange({ ...config, cols: Number(e.target.value) })
           }
         />
+      </div>
+
+      <div className="config-section">
+        <label className="config-label">Size Presets</label>
+        <div className="preset-buttons">
+          {SIZE_PRESETS.map((p) => (
+            <button
+              key={p.label}
+              className="btn-preset"
+              onClick={() => onConfigChange({ ...config, rows: p.rows, cols: p.cols })}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="config-section">

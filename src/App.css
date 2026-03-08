@@ -214,6 +214,29 @@
   line-height: 1.4;
 }
 
+/* Size presets */
+.preset-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-preset {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #D2B48C;
+  border-radius: 6px;
+  background: #FFFAF5;
+  color: #5D4037;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-preset:hover {
+  background: #FAEBD7;
+}
+
 /* Difficulty bar */
 .difficulty-bar {
   height: 8px;
