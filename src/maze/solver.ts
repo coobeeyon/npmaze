@@ -1,48 +1,86 @@
-import type { CellCoord } from "../types";
-import { ALL_DIRECTIONS, type Topology } from "./topology";
+import type { CellCoord, CrossingOver, Direction } from "../types";
+import { ALL_DIRECTIONS, type Topology, oppositeDir } from "./topology";
 import { wallKey } from "./walls";
 
-/** BFS solver: returns the path from start to end, or null if no path exists */
+/**
+ * BFS solver: returns the path from start to end, or null if no path exists.
+ * Handles crossing cells where you can only pass straight through.
+ */
 export function solveMaze(
   topology: Topology,
   walls: Set<string>,
   start: CellCoord,
   end: CellCoord,
+  crossings: Map<string, CrossingOver> = new Map(),
 ): CellCoord[] | null {
-  const key = (c: CellCoord) => `${c.row},${c.col}`;
-  const visited = new Set<string>();
-  const parent = new Map<string, CellCoord | null>();
+  const cellKey = (c: CellCoord) => `${c.row},${c.col}`;
 
-  const queue: CellCoord[] = [start];
-  visited.add(key(start));
-  parent.set(key(start), null);
+  // For crossings, we track visited state per passage direction
+  // State key: "row,col" for normal cells, "row,col:h" or "row,col:v" for crossings
+  interface BfsState {
+    cell: CellCoord;
+    stateKey: string;
+  }
+
+  const visited = new Set<string>();
+  const parent = new Map<string, BfsState | null>();
+
+  function getStateKey(cell: CellCoord, entryDir: Direction | null): string {
+    const ck = cellKey(cell);
+    const crossing = crossings.get(ck);
+    if (!crossing || entryDir === null) return ck;
+    // At a crossing, key depends on which passage we're using
+    const isHorizontal = entryDir === "east" || entryDir === "west";
+    return `${ck}:${isHorizontal ? "h" : "v"}`;
+  }
+
+  function getAllowedExitDirs(cell: CellCoord, entryDir: Direction | null): Direction[] {
+    const ck = cellKey(cell);
+    const crossing = crossings.get(ck);
+    if (!crossing || entryDir === null) return [...ALL_DIRECTIONS];
+    // At a crossing, can only exit in the opposite direction of entry
+    return [oppositeDir(entryDir)];
+  }
+
+  const startState: BfsState = { cell: start, stateKey: cellKey(start) };
+  visited.add(startState.stateKey);
+  parent.set(startState.stateKey, null);
+
+  const queue: { state: BfsState; entryDir: Direction | null }[] = [
+    { state: startState, entryDir: null },
+  ];
 
   while (queue.length > 0) {
-    const current = queue.shift()!;
+    const { state: current, entryDir } = queue.shift()!;
 
-    if (current.row === end.row && current.col === end.col) {
+    if (current.cell.row === end.row && current.cell.col === end.col) {
       // Reconstruct path
       const path: CellCoord[] = [];
-      let node: CellCoord | null = current;
+      let node: BfsState | null = current;
       while (node) {
-        path.unshift(node);
-        node = parent.get(key(node)) ?? null;
+        path.unshift(node.cell);
+        node = parent.get(node.stateKey) ?? null;
       }
       return path;
     }
 
-    for (const dir of ALL_DIRECTIONS) {
-      const neighbor = topology.neighbor(current, dir);
-      if (!neighbor) continue;
-      if (visited.has(key(neighbor))) continue;
+    const exitDirs = getAllowedExitDirs(current.cell, entryDir);
 
-      // Check if wall exists between current and neighbor
-      const wk = wallKey(current, neighbor);
+    for (const dir of exitDirs) {
+      const neighbor = topology.neighbor(current.cell, dir);
+      if (!neighbor) continue;
+
+      // Check wall
+      const wk = wallKey(current.cell, neighbor);
       if (walls.has(wk)) continue;
 
-      visited.add(key(neighbor));
-      parent.set(key(neighbor), current);
-      queue.push(neighbor);
+      const neighborStateKey = getStateKey(neighbor, dir);
+      if (visited.has(neighborStateKey)) continue;
+
+      const neighborState: BfsState = { cell: neighbor, stateKey: neighborStateKey };
+      visited.add(neighborStateKey);
+      parent.set(neighborStateKey, current);
+      queue.push({ state: neighborState, entryDir: dir });
     }
   }
 

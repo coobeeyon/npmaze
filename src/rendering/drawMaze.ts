@@ -1,4 +1,4 @@
-import type { CellCoord, Direction, MazeState } from "../types";
+import type { CellCoord, CrossingOver, Direction, MazeState } from "../types";
 import { type Topology, ALL_DIRECTIONS, createTopology } from "../maze/topology";
 import { wallKey } from "../maze/walls";
 import { COLORS } from "../theme/colors";
@@ -184,6 +184,114 @@ function drawWrapIndicators(
   }
 }
 
+/**
+ * Draw crossing cells with a bridge/tunnel visual effect.
+ * The "over" passage is drawn on top with a bridge appearance.
+ */
+function drawCrossings(
+  ctx: CanvasRenderingContext2D,
+  _topology: Topology,
+  crossings: Map<string, CrossingOver>,
+  opts: DrawOptions,
+  _walls: Set<string>,
+  _hoveredWall: string | null,
+) {
+  const { cellSize, offsetX, offsetY } = opts;
+  const gap = cellSize * 0.3; // gap size for the under-passage
+
+  for (const [ck, over] of crossings) {
+    const [rowStr, colStr] = ck.split(",");
+    const row = Number(rowStr);
+    const col = Number(colStr);
+    const x = offsetX + col * cellSize;
+    const y = offsetY + row * cellSize;
+    const cx = x + cellSize / 2;
+    const cy = y + cellSize / 2;
+
+    // The "under" passage has wall stubs on each side that stop at the bridge
+    // The "over" passage has a bridge drawn over the center
+
+    ctx.strokeStyle = COLORS.wallColor;
+    ctx.lineWidth = WALL_WIDTH;
+    ctx.lineCap = "round";
+
+    if (over === "h") {
+      // Horizontal (E-W) is over, vertical (N-S) goes under
+      // Draw N-S under-passage: wall stubs on east and west that leave a gap in the center
+      // East side wall stubs (north part and south part)
+      ctx.beginPath();
+      ctx.moveTo(x + cellSize, y);
+      ctx.lineTo(x + cellSize, cy - gap);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + cellSize, cy + gap);
+      ctx.lineTo(x + cellSize, y + cellSize);
+      ctx.stroke();
+      // West side wall stubs
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, cy - gap);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, cy + gap);
+      ctx.lineTo(x, y + cellSize);
+      ctx.stroke();
+
+      // Draw the bridge for E-W passage: two horizontal lines across the gap
+      // Fill bridge background to cover the under-passage
+      ctx.fillStyle = COLORS.cellBg;
+      ctx.fillRect(x, cy - gap, cellSize, gap * 2);
+      // Bridge walls (north and south edges of the E-W corridor)
+      ctx.strokeStyle = COLORS.wallColor;
+      ctx.lineWidth = WALL_WIDTH;
+      ctx.beginPath();
+      ctx.moveTo(x, cy - gap);
+      ctx.lineTo(x + cellSize, cy - gap);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, cy + gap);
+      ctx.lineTo(x + cellSize, cy + gap);
+      ctx.stroke();
+    } else {
+      // Vertical (N-S) is over, horizontal (E-W) goes under
+      // Draw E-W under-passage: wall stubs on north and south that leave a gap
+      // North side wall stubs
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(cx - gap, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + gap, y);
+      ctx.lineTo(x + cellSize, y);
+      ctx.stroke();
+      // South side wall stubs
+      ctx.beginPath();
+      ctx.moveTo(x, y + cellSize);
+      ctx.lineTo(cx - gap, y + cellSize);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + gap, y + cellSize);
+      ctx.lineTo(x + cellSize, y + cellSize);
+      ctx.stroke();
+
+      // Draw the bridge for N-S passage
+      ctx.fillStyle = COLORS.cellBg;
+      ctx.fillRect(cx - gap, y, gap * 2, cellSize);
+      // Bridge walls (east and west edges of the N-S corridor)
+      ctx.strokeStyle = COLORS.wallColor;
+      ctx.lineWidth = WALL_WIDTH;
+      ctx.beginPath();
+      ctx.moveTo(cx - gap, y);
+      ctx.lineTo(cx - gap, y + cellSize);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + gap, y);
+      ctx.lineTo(cx + gap, y + cellSize);
+      ctx.stroke();
+    }
+  }
+}
+
 export function drawMaze(
   ctx: CanvasRenderingContext2D,
   maze: MazeState,
@@ -221,13 +329,17 @@ export function drawMaze(
   const endCy = offsetY + (config.rows - 1) * cellSize + cellSize / 2;
   drawCarrot(ctx, endCx, endCy, cellSize);
 
-  // Draw walls
+  // Draw walls (skip crossing cells — drawn separately)
+  const crossings = maze.crossings;
+  const crossingKey = (c: CellCoord) => `${c.row},${c.col}`;
   ctx.lineCap = "round";
   for (let row = 0; row < config.rows; row++) {
     for (let col = 0; col < config.cols; col++) {
       const cell: CellCoord = { row, col };
       const x = offsetX + col * cellSize;
       const y = offsetY + row * cellSize;
+
+      if (crossings.has(crossingKey(cell))) continue; // drawn later
 
       for (const dir of ALL_DIRECTIONS) {
         const neighbor = topology.neighbor(cell, dir);
@@ -288,6 +400,9 @@ export function drawMaze(
       }
     }
   }
+
+  // Draw crossing cells with bridge effect
+  drawCrossings(ctx, topology, crossings, opts, walls, hoveredWall);
 
   // Draw solution path
   if (solutionPath && solutionPath.length > 1) {

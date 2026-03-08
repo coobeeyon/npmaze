@@ -114,6 +114,24 @@ export function ConfigPanel({
         </select>
       </div>
 
+      <div className="config-section">
+        <label className="config-label config-checkbox-label">
+          <input
+            type="checkbox"
+            checked={config.weave}
+            onChange={(e) =>
+              onConfigChange({ ...config, weave: e.target.checked })
+            }
+          />
+          Weave (crossings)
+        </label>
+        <span className="config-desc">
+          {config.weave
+            ? "Paths can cross over/under each other (DFS only)"
+            : "Standard planar maze"}
+        </span>
+      </div>
+
       <div className="config-buttons">
         <button className="btn btn-primary" onClick={onGenerate} disabled={animating}>
           Generate Maze

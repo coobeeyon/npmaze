@@ -14,12 +14,13 @@ const DEFAULT_CONFIG: MazeConfig = {
   cols: 16,
   surface: "rectangle",
   algorithm: "dfs",
+  weave: false,
 };
 
 function createMaze(config: MazeConfig): MazeState {
   const topology = createTopology(config.surface, config.rows, config.cols);
-  const walls = generateMaze(topology, config.algorithm);
-  return { config, walls };
+  const result = generateMaze(topology, config.algorithm, config.weave);
+  return { config, walls: result.walls, crossings: result.crossings };
 }
 
 export default function App() {
@@ -35,7 +36,7 @@ export default function App() {
     const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
     const start: CellCoord = { row: 0, col: 0 };
     const end: CellCoord = { row: maze.config.rows - 1, col: maze.config.cols - 1 };
-    return solveMaze(topology, maze.walls, start, end);
+    return solveMaze(topology, maze.walls, start, end, maze.crossings);
   }, [showSolution, maze]);
 
   const stopAnimation = useCallback(() => {
@@ -60,9 +61,9 @@ export default function App() {
 
     const topology = createTopology(config.surface, config.rows, config.cols);
     const allWalls = createAllWalls(topology);
-    const gen = generateMazeSteps(topology, config.algorithm);
+    const gen = generateMazeSteps(topology, config.algorithm, config.weave);
 
-    setMaze({ config, walls: allWalls });
+    setMaze({ config, walls: allWalls, crossings: new Map() });
     setAnimating(true);
 
     // Process multiple steps per frame for larger mazes
@@ -78,6 +79,7 @@ export default function App() {
       lastTime = timestamp;
 
       const removedWalls: string[] = [];
+      const newCrossings: { cellKey: string; over: import("./types").CrossingOver }[] = [];
       for (let i = 0; i < stepsPerFrame; i++) {
         const result = gen.next();
         if (result.done) {
@@ -85,7 +87,10 @@ export default function App() {
           animationRef.current = null;
           return;
         }
-        removedWalls.push(result.value);
+        removedWalls.push(result.value.wallKey);
+        if (result.value.crossing) {
+          newCrossings.push(result.value.crossing);
+        }
       }
 
       setMaze((prev) => {
@@ -93,7 +98,13 @@ export default function App() {
         for (const wk of removedWalls) {
           newWalls.delete(wk);
         }
-        return { ...prev, walls: newWalls };
+        const crossingsMap = newCrossings.length > 0
+          ? new Map(prev.crossings)
+          : prev.crossings;
+        for (const c of newCrossings) {
+          crossingsMap.set(c.cellKey, c.over);
+        }
+        return { ...prev, walls: newWalls, crossings: crossingsMap };
       });
 
       animationRef.current = requestAnimationFrame(step);

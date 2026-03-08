@@ -19,10 +19,16 @@ export interface MazeConfig {
   cols: number;
   surface: SurfaceType;
   algorithm: AlgorithmType;
+  weave: boolean;
 }
+
+/** Crossing orientation: which passage goes over */
+export type CrossingOver = "h" | "v"; // "h" = E-W over, "v" = N-S over
 
 export interface MazeState {
   config: MazeConfig;
   /** Set of wall keys that are present (walls not removed) */
   walls: Set<string>;
+  /** Map of cell key -> crossing orientation (which direction is the overpass) */
+  crossings: Map<string, CrossingOver>;
 }

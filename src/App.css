@@ -103,6 +103,20 @@
   cursor: pointer;
 }
 
+.config-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.config-checkbox-label input[type="checkbox"] {
+  accent-color: #D4886B;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
 .config-buttons {
   display: flex;
   flex-direction: column;
