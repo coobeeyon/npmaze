@@ -35,11 +35,10 @@
       "title": "Improve mobile layout for config panel",
       "description": "The sidebar on mobile (max-width 700px) is limited to 200px which is too cramped. Make it scrollable and expand the height. Group action buttons into a row layout on mobile.",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 2,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T22:26:44.713172743Z",
-      "updated_at": "2026-03-08T22:26:47.192890662Z"
+      "updated_at": "2026-03-08T22:27:12.482501384Z"
     },
     "lb-2ejg": {
       "id": "lb-2ejg",
