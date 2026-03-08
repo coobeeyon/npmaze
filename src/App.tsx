@@ -23,6 +23,58 @@ const DEFAULT_CONFIG: MazeConfig = {
   seed: randomSeed(),
 };
 
+/** Parse maze config from URL search params, falling back to defaults */
+function parseConfigFromURL(): MazeConfig {
+  const params = new URLSearchParams(window.location.search);
+  const config = { ...DEFAULT_CONFIG };
+
+  const seed = params.get("seed");
+  if (seed) {
+    const val = parseInt(seed, 16);
+    if (!isNaN(val)) config.seed = val >>> 0;
+  }
+
+  const rows = params.get("rows");
+  if (rows) {
+    const val = parseInt(rows, 10);
+    if (val >= 3 && val <= 40) config.rows = val;
+  }
+
+  const cols = params.get("cols");
+  if (cols) {
+    const val = parseInt(cols, 10);
+    if (val >= 3 && val <= 40) config.cols = val;
+  }
+
+  const surface = params.get("surface");
+  if (surface && ["rectangle", "cylinder", "torus", "mobius", "klein"].includes(surface)) {
+    config.surface = surface as MazeConfig["surface"];
+  }
+
+  const algorithm = params.get("algo");
+  if (algorithm && ["dfs", "kruskal", "prim"].includes(algorithm)) {
+    config.algorithm = algorithm as MazeConfig["algorithm"];
+  }
+
+  const weave = params.get("weave");
+  if (weave === "1") config.weave = true;
+  if (weave === "0") config.weave = false;
+
+  return config;
+}
+
+/** Build a shareable URL for a maze config */
+function buildShareURL(config: MazeConfig): string {
+  const params = new URLSearchParams();
+  params.set("seed", config.seed.toString(16).toUpperCase());
+  params.set("rows", config.rows.toString());
+  params.set("cols", config.cols.toString());
+  if (config.surface !== "rectangle") params.set("surface", config.surface);
+  if (config.algorithm !== "dfs") params.set("algo", config.algorithm);
+  if (config.weave) params.set("weave", "1");
+  return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+}
+
 function createMaze(config: MazeConfig): MazeState {
   const topology = createTopology(config.surface, config.rows, config.cols);
   const rng = mulberry32(config.seed);
@@ -31,13 +83,14 @@ function createMaze(config: MazeConfig): MazeState {
 }
 
 export default function App() {
-  const [config, setConfig] = useState<MazeConfig>(DEFAULT_CONFIG);
-  const [maze, setMaze] = useState<MazeState>(() => createMaze(DEFAULT_CONFIG));
+  const [config, setConfig] = useState<MazeConfig>(() => parseConfigFromURL());
+  const [maze, setMaze] = useState<MazeState>(() => createMaze(parseConfigFromURL()));
+  const [linkCopied, setLinkCopied] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [animating, setAnimating] = useState(false);
   const [start, setStart] = useState<CellCoord>({ row: 0, col: 0 });
-  const [end, setEnd] = useState<CellCoord>({ row: DEFAULT_CONFIG.rows - 1, col: DEFAULT_CONFIG.cols - 1 });
+  const [end, setEnd] = useState<CellCoord>(() => ({ row: config.rows - 1, col: config.cols - 1 }));
   const [placementMode, setPlacementMode] = useState<PlacementMode>(null);
   const [solvingAnimating, setSolvingAnimating] = useState(false);
   const [exploredCells, setExploredCells] = useState<Set<string> | null>(null);
@@ -90,6 +143,7 @@ export default function App() {
     setStart({ row: 0, col: 0 });
     setEnd({ row: config.rows - 1, col: config.cols - 1 });
     setPlacementMode(null);
+    window.history.replaceState(null, "", buildShareURL(newConfig));
   }, [config, stopAnimation, stopSolverAnimation]);
 
   const handleAnimate = useCallback(() => {
@@ -105,6 +159,7 @@ export default function App() {
     const newSeed = randomSeed();
     const newConfig = { ...config, seed: newSeed };
     setConfig(newConfig);
+    window.history.replaceState(null, "", buildShareURL(newConfig));
     const topology = createTopology(newConfig.surface, newConfig.rows, newConfig.cols);
     const allWalls = createAllWalls(topology);
     const rng = mulberry32(newSeed);
@@ -218,6 +273,16 @@ export default function App() {
     solverAnimationRef.current = requestAnimationFrame(step);
   }, [maze, start, end, stopSolverAnimation]);
 
+  const handleCopyLink = useCallback(() => {
+    const url = buildShareURL(maze.config);
+    navigator.clipboard.writeText(url).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+    // Update the URL bar without reloading
+    window.history.replaceState(null, "", buildShareURL(maze.config));
+  }, [maze.config]);
+
   const handleExport = useCallback(() => {
     exportMazePNG(maze, solutionPath, start, end);
   }, [maze, solutionPath, start, end]);
@@ -313,6 +378,8 @@ export default function App() {
             solvingAnimating={solvingAnimating}
             onAnimateSolve={handleAnimateSolve}
             onStopSolverAnimation={stopSolverAnimation}
+            onCopyLink={handleCopyLink}
+            linkCopied={linkCopied}
           />
           <TopologyInfo surface={config.surface} />
           <DifficultyPanel score={difficulty} />

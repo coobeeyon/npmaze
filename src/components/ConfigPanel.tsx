@@ -18,6 +18,8 @@ interface ConfigPanelProps {
   solvingAnimating: boolean;
   onAnimateSolve: () => void;
   onStopSolverAnimation: () => void;
+  onCopyLink: () => void;
+  linkCopied: boolean;
 }
 
 const SURFACES: { value: SurfaceType; label: string; desc: string }[] = [
@@ -57,6 +59,8 @@ export function ConfigPanel({
   solvingAnimating,
   onAnimateSolve,
   onStopSolverAnimation,
+  onCopyLink,
+  linkCopied,
 }: ConfigPanelProps) {
   return (
     <div className="config-panel" role="form" aria-label="Maze configuration">
@@ -230,6 +234,9 @@ export function ConfigPanel({
         </button>
         <button className="btn btn-secondary" onClick={onExport}>
           Export PNG
+        </button>
+        <button className="btn btn-secondary" onClick={onCopyLink}>
+          {linkCopied ? "Link Copied!" : "Copy Link"}
         </button>
       </div>
     </div>
