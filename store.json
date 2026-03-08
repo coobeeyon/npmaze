@@ -53,22 +53,22 @@
   },
   "deps": [
     {
-      "from_id": "lb-t8lw",
-      "to_id": "lb-l7l1",
-      "dep_type": "parent"
-    },
-    {
       "from_id": "lb-2ejg",
       "to_id": "lb-l7l1",
       "dep_type": "parent"
     },
     {
-      "from_id": "lb-voc2",
+      "from_id": "lb-88gd",
       "to_id": "lb-l7l1",
       "dep_type": "parent"
     },
     {
-      "from_id": "lb-88gd",
+      "from_id": "lb-t8lw",
+      "to_id": "lb-l7l1",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-voc2",
       "to_id": "lb-l7l1",
       "dep_type": "parent"
     }
