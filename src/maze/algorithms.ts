@@ -143,6 +143,7 @@ function generateKruskal(topology: Topology): GenerationResult {
 
   // Collect all walls as edges
   const edges: { a: CellCoord; b: CellCoord; wk: string }[] = [];
+  const seenWalls = new Set<string>();
   for (let row = 0; row < topology.rows; row++) {
     for (let col = 0; col < topology.cols; col++) {
       const cell: CellCoord = { row, col };
@@ -150,8 +151,8 @@ function generateKruskal(topology: Topology): GenerationResult {
         const neighbor = topology.neighbor(cell, dir);
         if (neighbor) {
           const wk = wallKey(cell, neighbor);
-          // Avoid duplicates: only add if we haven't seen this wall key
-          if (!edges.some((e) => e.wk === wk)) {
+          if (!seenWalls.has(wk)) {
+            seenWalls.add(wk);
             edges.push({ a: cell, b: neighbor, wk });
           }
         }
@@ -315,6 +316,7 @@ function* generateKruskalSteps(topology: Topology): Generator<AnimationStep, Gen
   const walls = createAllWalls(topology);
   const uf = new UnionFind(topology.rows * topology.cols);
   const edges: { a: CellCoord; b: CellCoord; wk: string }[] = [];
+  const seenWalls = new Set<string>();
   for (let row = 0; row < topology.rows; row++) {
     for (let col = 0; col < topology.cols; col++) {
       const cell: CellCoord = { row, col };
@@ -322,7 +324,8 @@ function* generateKruskalSteps(topology: Topology): Generator<AnimationStep, Gen
         const neighbor = topology.neighbor(cell, dir);
         if (neighbor) {
           const wk = wallKey(cell, neighbor);
-          if (!edges.some((e) => e.wk === wk)) {
+          if (!seenWalls.has(wk)) {
+            seenWalls.add(wk);
             edges.push({ a: cell, b: neighbor, wk });
           }
         }
