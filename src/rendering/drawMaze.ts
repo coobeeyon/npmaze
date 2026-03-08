@@ -193,8 +193,6 @@ function drawCrossings(
   _topology: Topology,
   crossings: Map<string, CrossingOver>,
   opts: DrawOptions,
-  _walls: Set<string>,
-  _hoveredWall: string | null,
 ) {
   const { cellSize, offsetX, offsetY } = opts;
   const gap = cellSize * 0.3; // gap size for the under-passage
@@ -422,7 +420,7 @@ export function drawMaze(
   }
 
   // Draw crossing cells with bridge effect
-  drawCrossings(ctx, topology, crossings, opts, walls, hoveredWall);
+  drawCrossings(ctx, topology, crossings, opts);
 
   // Draw solution path
   if (solutionPath && solutionPath.length > 1) {

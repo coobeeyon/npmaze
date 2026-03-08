@@ -1,4 +1,4 @@
-import type { CellCoord, CrossingOver } from "../types";
+import type { CellCoord } from "../types";
 import { ALL_DIRECTIONS, type Topology } from "./topology";
 import { wallKey } from "./walls";
 
@@ -35,7 +35,6 @@ export function scoreDifficulty(
   topology: Topology,
   walls: Set<string>,
   solutionPath: CellCoord[] | null,
-  _crossings: Map<string, CrossingOver> = new Map(),
 ): DifficultyScore {
   const totalCells = topology.rows * topology.cols;
   let deadEnds = 0;

@@ -7,7 +7,7 @@ function getInitialTheme(): ThemeMode {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "dark" || stored === "light") return stored;
-  } catch {}
+  } catch { /* localStorage unavailable */ }
   if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) return "dark";
   return "light";
 }
@@ -38,7 +38,7 @@ export function useTheme() {
     applyCSSVars(theme);
     try {
       localStorage.setItem(STORAGE_KEY, theme);
-    } catch {}
+    } catch { /* localStorage unavailable */ }
   }, [theme]);
 
   const toggleTheme = useCallback(() => {

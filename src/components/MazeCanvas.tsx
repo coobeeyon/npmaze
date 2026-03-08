@@ -25,9 +25,17 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
   const isPanning = useRef(false);
+  const [cursorStyle, setCursorStyle] = useState<string>("grab");
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const didDrag = useRef(false);
   const touchRef = useRef<{ startX: number; startY: number; startPanX: number; startPanY: number; pinchDist: number; pinchZoom: number; pinchCenterX: number; pinchCenterY: number } | null>(null);
+
+  // Update cursor when mode changes
+  useEffect(() => {
+    if (!isPanning.current) {
+      setCursorStyle(editMode || placementMode ? "crosshair" : "grab");
+    }
+  }, [editMode, placementMode]);
 
   // Reset zoom/pan when maze config changes
   const prevConfigRef = useRef(maze.config);
@@ -73,6 +81,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
 
     drawMaze(ctx, maze, editMode, hoveredWall, solutionPath, start, end, exploredCells);
     ctx.restore();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- theme changes COLORS module state, must trigger redraw
   }, [maze, editMode, hoveredWall, solutionPath, start, end, exploredCells, zoom, panX, panY, theme]);
 
   useEffect(() => {
@@ -142,6 +151,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
 
       isPanning.current = true;
       didDrag.current = false;
+      setCursorStyle("grabbing");
       panStart.current = {
         x: e.clientX,
         y: e.clientY,
@@ -180,12 +190,14 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
 
   const handleMouseUp = useCallback(() => {
     isPanning.current = false;
-  }, []);
+    setCursorStyle(editMode || placementMode ? "crosshair" : "grab");
+  }, [editMode, placementMode]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredWall(null);
     isPanning.current = false;
-  }, []);
+    setCursorStyle(editMode || placementMode ? "crosshair" : "grab");
+  }, [editMode, placementMode]);
 
   // Wheel zoom — zoom toward cursor position
   useEffect(() => {
@@ -345,11 +357,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
           width: "100%",
           height: "100%",
           touchAction: "none",
-          cursor: isPanning.current
-            ? "grabbing"
-            : editMode || placementMode
-              ? "crosshair"
-              : "grab",
+          cursor: cursorStyle,
         }}
         onClick={handleClick}
         onMouseDown={handleMouseDown}

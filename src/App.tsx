@@ -109,7 +109,7 @@ export default function App() {
   const difficulty = useMemo(() => {
     const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
     const path = solveMaze(topology, maze.walls, start, end, maze.crossings);
-    return scoreDifficulty(topology, maze.walls, path, maze.crossings);
+    return scoreDifficulty(topology, maze.walls, path);
   }, [maze, start, end]);
 
   const stopAnimation = useCallback(() => {
