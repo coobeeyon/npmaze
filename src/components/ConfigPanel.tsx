@@ -11,6 +11,7 @@ interface ConfigPanelProps {
   onStopAnimation: () => void;
   onToggleEdit: () => void;
   onToggleSolution: () => void;
+  onExport: () => void;
 }
 
 const SURFACES: { value: SurfaceType; label: string; desc: string }[] = [
@@ -38,6 +39,7 @@ export function ConfigPanel({
   onStopAnimation,
   onToggleEdit,
   onToggleSolution,
+  onExport,
 }: ConfigPanelProps) {
   return (
     <div className="config-panel" role="form" aria-label="Maze configuration">
@@ -153,6 +155,9 @@ export function ConfigPanel({
           onClick={onToggleSolution}
         >
           {showSolution ? "Hide Solution" : "Show Solution"}
+        </button>
+        <button className="btn btn-secondary" onClick={onExport}>
+          Export PNG
         </button>
       </div>
     </div>

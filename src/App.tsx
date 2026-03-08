@@ -7,6 +7,7 @@ import { solveMaze } from "./maze/solver";
 import { MazeCanvas } from "./components/MazeCanvas";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { TopologyInfo } from "./components/TopologyInfo";
+import { exportMazePNG } from "./rendering/drawMaze";
 import "./App.css";
 
 const DEFAULT_CONFIG: MazeConfig = {
@@ -113,6 +114,10 @@ export default function App() {
     animationRef.current = requestAnimationFrame(step);
   }, [config, stopAnimation]);
 
+  const handleExport = useCallback(() => {
+    exportMazePNG(maze, solutionPath);
+  }, [maze, solutionPath]);
+
   const handleToggleWall = useCallback((wallKey: string) => {
     setMaze((prev) => {
       const newWalls = new Set(prev.walls);
@@ -149,6 +154,7 @@ export default function App() {
             onStopAnimation={stopAnimation}
             onToggleEdit={() => setEditMode((e) => !e)}
             onToggleSolution={() => setShowSolution((s) => !s)}
+            onExport={handleExport}
           />
           <TopologyInfo surface={config.surface} />
         </aside>

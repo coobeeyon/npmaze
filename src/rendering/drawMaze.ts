@@ -441,6 +441,30 @@ export function drawMaze(
   drawWrapIndicators(ctx, topology, opts);
 }
 
+/** Export maze as PNG by drawing to an offscreen canvas at fixed resolution */
+export function exportMazePNG(
+  maze: MazeState,
+  solutionPath: CellCoord[] | null = null,
+) {
+  const { config } = maze;
+  const cellSize = 30;
+  const padding = 40;
+  const width = cellSize * config.cols + padding * 2;
+  const height = cellSize * config.rows + padding * 2;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d")!;
+
+  drawMaze(ctx, maze, false, null, solutionPath);
+
+  const link = document.createElement("a");
+  link.download = `skinny-pig-maze-${config.rows}x${config.cols}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
 /** Hit test: given a click position, find the nearest wall key */
 export function hitTestWall(
   x: number,
