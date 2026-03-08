@@ -40,6 +40,16 @@
       "created_at": "2026-03-08T19:12:56.857032127Z",
       "updated_at": "2026-03-08T19:13:52.461288132Z"
     },
+    "lb-5q15": {
+      "id": "lb-5q15",
+      "title": "Phase 3: UX Improvements",
+      "description": "Third phase: solver animation, undo/redo in edit mode, zoom/pan, and UI polish",
+      "item_type": "epic",
+      "status": "open",
+      "priority": 2,
+      "created_at": "2026-03-08T19:26:02.932832490Z",
+      "updated_at": "2026-03-08T19:26:02.932832490Z"
+    },
     "lb-88gd": {
       "id": "lb-88gd",
       "title": "Skinny pig theming + polish",
