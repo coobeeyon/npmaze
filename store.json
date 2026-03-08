@@ -164,11 +164,10 @@
       "title": "Add keyboard shortcut hints",
       "description": "Show keyboard shortcut hints (Ctrl+Z/Y for undo/redo in edit mode, mouse controls for zoom/pan) somewhere in the UI, e.g. a collapsible help section.",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 3,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T22:27:21.916244221Z",
-      "updated_at": "2026-03-08T22:30:22.867446824Z"
+      "updated_at": "2026-03-08T22:31:08.284514784Z"
     },
     "lb-cg1b": {
       "id": "lb-cg1b",
