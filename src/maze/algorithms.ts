@@ -136,13 +136,60 @@ function generateDFS(topology: Topology, weave: boolean = false): GenerationResu
   return { walls, crossings };
 }
 
+/**
+ * Check if a cell can serve as a crossing for edge-based algorithms.
+ * Similar to canTunnel but checks wall state for perpendicular passage
+ * without requiring visited tracking (uses wall state instead).
+ */
+function canCreateCrossing(
+  mid: CellCoord,
+  dir: Direction,
+  topology: Topology,
+  walls: Set<string>,
+  crossings: Map<string, CrossingOver>,
+): boolean {
+  const key = (c: CellCoord) => `${c.row},${c.col}`;
+  if (crossings.has(key(mid))) return false;
+
+  const opp = oppositeDir(dir);
+  const isHorizontal = dir === "east" || dir === "west";
+  const perpDirs: Direction[] = isHorizontal ? ["north", "south"] : ["east", "west"];
+  const tunnelDirs: Direction[] = [dir, opp];
+
+  // Mid must have walls in the tunnel direction (not yet carved through)
+  for (const d of tunnelDirs) {
+    const n = topology.neighbor(mid, d);
+    if (!n) return false;
+    const wk = wallKey(mid, n);
+    if (!walls.has(wk)) return false;
+  }
+
+  // Mid must have open passages in perpendicular direction
+  for (const d of perpDirs) {
+    const n = topology.neighbor(mid, d);
+    if (!n) return false;
+    const wk = wallKey(mid, n);
+    if (walls.has(wk)) return false;
+  }
+
+  return true;
+}
+
 /** Kruskal's algorithm maze generation */
-function generateKruskal(topology: Topology): GenerationResult {
+function generateKruskal(topology: Topology, weave: boolean = false): GenerationResult {
   const walls = createAllWalls(topology);
+  const crossings = new Map<string, CrossingOver>();
   const uf = new UnionFind(topology.rows * topology.cols);
 
+  const key = (c: CellCoord) => `${c.row},${c.col}`;
+
+  // Edge types: normal (adjacent) and tunnel (through a mid cell)
+  type NormalEdge = { type: "normal"; a: CellCoord; b: CellCoord; wk: string };
+  type TunnelEdge = { type: "tunnel"; a: CellCoord; mid: CellCoord; b: CellCoord; dir: Direction };
+  type Edge = NormalEdge | TunnelEdge;
+
   // Collect all walls as edges
-  const edges: { a: CellCoord; b: CellCoord; wk: string }[] = [];
+  const edges: Edge[] = [];
   const seenWalls = new Set<string>();
   for (let row = 0; row < topology.rows; row++) {
     for (let col = 0; col < topology.cols; col++) {
@@ -153,7 +200,15 @@ function generateKruskal(topology: Topology): GenerationResult {
           const wk = wallKey(cell, neighbor);
           if (!seenWalls.has(wk)) {
             seenWalls.add(wk);
-            edges.push({ a: cell, b: neighbor, wk });
+            edges.push({ type: "normal", a: cell, b: neighbor, wk });
+          }
+
+          // Add tunnel edges if weave is enabled
+          if (weave) {
+            const far = topology.neighbor(neighbor, dir);
+            if (far) {
+              edges.push({ type: "tunnel", a: cell, mid: neighbor, b: far, dir });
+            }
           }
         }
       }
@@ -163,23 +218,68 @@ function generateKruskal(topology: Topology): GenerationResult {
   shuffle(edges);
 
   for (const edge of edges) {
-    const ia = cellIndex(edge.a, topology.cols);
-    const ib = cellIndex(edge.b, topology.cols);
-    if (uf.union(ia, ib)) {
-      walls.delete(edge.wk);
+    if (edge.type === "normal") {
+      const ia = cellIndex(edge.a, topology.cols);
+      const ib = cellIndex(edge.b, topology.cols);
+      if (uf.union(ia, ib)) {
+        walls.delete(edge.wk);
+      }
+    } else {
+      // Tunnel edge: check if a and b are in different sets and mid can be a crossing
+      const ia = cellIndex(edge.a, topology.cols);
+      const ib = cellIndex(edge.b, topology.cols);
+      if (uf.find(ia) !== uf.find(ib) && canCreateCrossing(edge.mid, edge.dir, topology, walls, crossings)) {
+        uf.union(ia, ib);
+        walls.delete(wallKey(edge.a, edge.mid));
+        walls.delete(wallKey(edge.mid, edge.b));
+        const isHorizontal = edge.dir === "east" || edge.dir === "west";
+        crossings.set(key(edge.mid), isHorizontal ? "v" : "h");
+      }
     }
   }
 
-  return { walls, crossings: new Map() };
+  return { walls, crossings };
 }
 
 /** Prim's algorithm maze generation */
-function generatePrim(topology: Topology): GenerationResult {
+function generatePrim(topology: Topology, weave: boolean = false): GenerationResult {
   const walls = createAllWalls(topology);
+  const crossings = new Map<string, CrossingOver>();
   const inMaze = new Set<string>();
-  const frontier: { cell: CellCoord; from: CellCoord; wk: string }[] = [];
 
+  type NormalFrontier = { type: "normal"; cell: CellCoord; from: CellCoord; wk: string };
+  type TunnelFrontier = { type: "tunnel"; cell: CellCoord; mid: CellCoord; from: CellCoord; dir: Direction };
+  type FrontierEntry = NormalFrontier | TunnelFrontier;
+
+  const frontier: FrontierEntry[] = [];
   const key = (c: CellCoord) => `${c.row},${c.col}`;
+
+  function addFrontierNeighbors(cell: CellCoord) {
+    for (const dir of ALL_DIRECTIONS) {
+      const neighbor = topology.neighbor(cell, dir);
+      if (neighbor && !inMaze.has(key(neighbor))) {
+        frontier.push({
+          type: "normal",
+          cell: neighbor,
+          from: cell,
+          wk: wallKey(cell, neighbor),
+        });
+      }
+      // Add tunnel frontier entries if weave enabled
+      if (weave && neighbor && inMaze.has(key(neighbor))) {
+        const far = topology.neighbor(neighbor, dir);
+        if (far && !inMaze.has(key(far))) {
+          frontier.push({
+            type: "tunnel",
+            cell: far,
+            mid: neighbor,
+            from: cell,
+            dir,
+          });
+        }
+      }
+    }
+  }
 
   // Start from random cell
   const start: CellCoord = {
@@ -187,18 +287,7 @@ function generatePrim(topology: Topology): GenerationResult {
     col: Math.floor(Math.random() * topology.cols),
   };
   inMaze.add(key(start));
-
-  // Add start's neighbors to frontier
-  for (const dir of ALL_DIRECTIONS) {
-    const neighbor = topology.neighbor(start, dir);
-    if (neighbor) {
-      frontier.push({
-        cell: neighbor,
-        from: start,
-        wk: wallKey(start, neighbor),
-      });
-    }
-  }
+  addFrontierNeighbors(start);
 
   while (frontier.length > 0) {
     const idx = Math.floor(Math.random() * frontier.length);
@@ -207,24 +296,23 @@ function generatePrim(topology: Topology): GenerationResult {
 
     if (inMaze.has(key(edge.cell))) continue;
 
-    // Add cell to maze and remove wall
-    inMaze.add(key(edge.cell));
-    walls.delete(edge.wk);
-
-    // Add new neighbors to frontier
-    for (const dir of ALL_DIRECTIONS) {
-      const neighbor = topology.neighbor(edge.cell, dir);
-      if (neighbor && !inMaze.has(key(neighbor))) {
-        frontier.push({
-          cell: neighbor,
-          from: edge.cell,
-          wk: wallKey(edge.cell, neighbor),
-        });
-      }
+    if (edge.type === "normal") {
+      inMaze.add(key(edge.cell));
+      walls.delete(edge.wk);
+    } else {
+      // Tunnel: check if mid cell can still be a crossing
+      if (!canCreateCrossing(edge.mid, edge.dir, topology, walls, crossings)) continue;
+      inMaze.add(key(edge.cell));
+      walls.delete(wallKey(edge.from, edge.mid));
+      walls.delete(wallKey(edge.mid, edge.cell));
+      const isHorizontal = edge.dir === "east" || edge.dir === "west";
+      crossings.set(key(edge.mid), isHorizontal ? "v" : "h");
     }
+
+    addFrontierNeighbors(edge.cell);
   }
 
-  return { walls, crossings: new Map() };
+  return { walls, crossings };
 }
 
 export function generateMaze(
@@ -236,9 +324,9 @@ export function generateMaze(
     case "dfs":
       return generateDFS(topology, weave);
     case "kruskal":
-      return generateKruskal(topology);
+      return generateKruskal(topology, weave);
     case "prim":
-      return generatePrim(topology);
+      return generatePrim(topology, weave);
   }
 }
 
@@ -312,10 +400,17 @@ function* generateDFSSteps(topology: Topology, weave: boolean = false): Generato
 }
 
 /** Step-by-step Kruskal's generation for animation */
-function* generateKruskalSteps(topology: Topology): Generator<AnimationStep, GenerationResult> {
+function* generateKruskalSteps(topology: Topology, weave: boolean = false): Generator<AnimationStep, GenerationResult> {
   const walls = createAllWalls(topology);
+  const crossings = new Map<string, CrossingOver>();
   const uf = new UnionFind(topology.rows * topology.cols);
-  const edges: { a: CellCoord; b: CellCoord; wk: string }[] = [];
+  const key = (c: CellCoord) => `${c.row},${c.col}`;
+
+  type NormalEdge = { type: "normal"; a: CellCoord; b: CellCoord; wk: string };
+  type TunnelEdge = { type: "tunnel"; a: CellCoord; mid: CellCoord; b: CellCoord; dir: Direction };
+  type Edge = NormalEdge | TunnelEdge;
+
+  const edges: Edge[] = [];
   const seenWalls = new Set<string>();
   for (let row = 0; row < topology.rows; row++) {
     for (let col = 0; col < topology.cols; col++) {
@@ -326,59 +421,122 @@ function* generateKruskalSteps(topology: Topology): Generator<AnimationStep, Gen
           const wk = wallKey(cell, neighbor);
           if (!seenWalls.has(wk)) {
             seenWalls.add(wk);
-            edges.push({ a: cell, b: neighbor, wk });
+            edges.push({ type: "normal", a: cell, b: neighbor, wk });
+          }
+          if (weave) {
+            const far = topology.neighbor(neighbor, dir);
+            if (far) {
+              edges.push({ type: "tunnel", a: cell, mid: neighbor, b: far, dir });
+            }
           }
         }
       }
     }
   }
   shuffle(edges);
+
   for (const edge of edges) {
-    const ia = cellIndex(edge.a, topology.cols);
-    const ib = cellIndex(edge.b, topology.cols);
-    if (uf.union(ia, ib)) {
-      walls.delete(edge.wk);
-      yield { wallKey: edge.wk };
+    if (edge.type === "normal") {
+      const ia = cellIndex(edge.a, topology.cols);
+      const ib = cellIndex(edge.b, topology.cols);
+      if (uf.union(ia, ib)) {
+        walls.delete(edge.wk);
+        yield { wallKey: edge.wk };
+      }
+    } else {
+      const ia = cellIndex(edge.a, topology.cols);
+      const ib = cellIndex(edge.b, topology.cols);
+      if (uf.find(ia) !== uf.find(ib) && canCreateCrossing(edge.mid, edge.dir, topology, walls, crossings)) {
+        uf.union(ia, ib);
+        const wk1 = wallKey(edge.a, edge.mid);
+        const wk2 = wallKey(edge.mid, edge.b);
+        walls.delete(wk1);
+        walls.delete(wk2);
+        const isHorizontal = edge.dir === "east" || edge.dir === "west";
+        const over: CrossingOver = isHorizontal ? "v" : "h";
+        crossings.set(key(edge.mid), over);
+        yield { wallKey: wk1, crossing: { cellKey: key(edge.mid), over } };
+        yield { wallKey: wk2 };
+      }
     }
   }
-  return { walls, crossings: new Map() };
+  return { walls, crossings };
 }
 
 /** Step-by-step Prim's generation for animation */
-function* generatePrimSteps(topology: Topology): Generator<AnimationStep, GenerationResult> {
+function* generatePrimSteps(topology: Topology, weave: boolean = false): Generator<AnimationStep, GenerationResult> {
   const walls = createAllWalls(topology);
+  const crossings = new Map<string, CrossingOver>();
   const inMaze = new Set<string>();
-  const frontier: { cell: CellCoord; from: CellCoord; wk: string }[] = [];
   const key = (c: CellCoord) => `${c.row},${c.col}`;
+
+  type NormalFrontier = { type: "normal"; cell: CellCoord; from: CellCoord; wk: string };
+  type TunnelFrontier = { type: "tunnel"; cell: CellCoord; mid: CellCoord; from: CellCoord; dir: Direction };
+  type FrontierEntry = NormalFrontier | TunnelFrontier;
+
+  const frontier: FrontierEntry[] = [];
+
+  function addFrontierNeighbors(cell: CellCoord) {
+    for (const dir of ALL_DIRECTIONS) {
+      const neighbor = topology.neighbor(cell, dir);
+      if (neighbor && !inMaze.has(key(neighbor))) {
+        frontier.push({
+          type: "normal",
+          cell: neighbor,
+          from: cell,
+          wk: wallKey(cell, neighbor),
+        });
+      }
+      if (weave && neighbor && inMaze.has(key(neighbor))) {
+        const far = topology.neighbor(neighbor, dir);
+        if (far && !inMaze.has(key(far))) {
+          frontier.push({
+            type: "tunnel",
+            cell: far,
+            mid: neighbor,
+            from: cell,
+            dir,
+          });
+        }
+      }
+    }
+  }
 
   const start: CellCoord = {
     row: Math.floor(Math.random() * topology.rows),
     col: Math.floor(Math.random() * topology.cols),
   };
   inMaze.add(key(start));
-  for (const dir of ALL_DIRECTIONS) {
-    const neighbor = topology.neighbor(start, dir);
-    if (neighbor) {
-      frontier.push({ cell: neighbor, from: start, wk: wallKey(start, neighbor) });
-    }
-  }
+  addFrontierNeighbors(start);
 
   while (frontier.length > 0) {
     const idx = Math.floor(Math.random() * frontier.length);
     const edge = frontier[idx];
     frontier.splice(idx, 1);
+
     if (inMaze.has(key(edge.cell))) continue;
-    inMaze.add(key(edge.cell));
-    walls.delete(edge.wk);
-    yield { wallKey: edge.wk };
-    for (const dir of ALL_DIRECTIONS) {
-      const neighbor = topology.neighbor(edge.cell, dir);
-      if (neighbor && !inMaze.has(key(neighbor))) {
-        frontier.push({ cell: neighbor, from: edge.cell, wk: wallKey(edge.cell, neighbor) });
-      }
+
+    if (edge.type === "normal") {
+      inMaze.add(key(edge.cell));
+      walls.delete(edge.wk);
+      yield { wallKey: edge.wk };
+    } else {
+      if (!canCreateCrossing(edge.mid, edge.dir, topology, walls, crossings)) continue;
+      inMaze.add(key(edge.cell));
+      const wk1 = wallKey(edge.from, edge.mid);
+      const wk2 = wallKey(edge.mid, edge.cell);
+      walls.delete(wk1);
+      walls.delete(wk2);
+      const isHorizontal = edge.dir === "east" || edge.dir === "west";
+      const over: CrossingOver = isHorizontal ? "v" : "h";
+      crossings.set(key(edge.mid), over);
+      yield { wallKey: wk1, crossing: { cellKey: key(edge.mid), over } };
+      yield { wallKey: wk2 };
     }
+
+    addFrontierNeighbors(edge.cell);
   }
-  return { walls, crossings: new Map() };
+  return { walls, crossings };
 }
 
 /** Create a step-by-step generator for animated maze generation */
@@ -391,8 +549,8 @@ export function generateMazeSteps(
     case "dfs":
       return generateDFSSteps(topology, weave);
     case "kruskal":
-      return generateKruskalSteps(topology);
+      return generateKruskalSteps(topology, weave);
     case "prim":
-      return generatePrimSteps(topology);
+      return generatePrimSteps(topology, weave);
   }
 }

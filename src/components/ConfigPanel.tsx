@@ -155,7 +155,7 @@ export function ConfigPanel({
         </label>
         <span className="config-desc">
           {config.weave
-            ? "Paths can cross over/under each other (DFS only)"
+            ? "Paths can cross over/under each other"
             : "Standard planar maze"}
         </span>
       </div>
