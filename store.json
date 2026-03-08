@@ -170,6 +170,16 @@
       "created_at": "2026-03-08T17:12:40.310747421Z",
       "updated_at": "2026-03-08T17:22:56.139621209Z"
     },
+    "lb-lbkw": {
+      "id": "lb-lbkw",
+      "title": "Fix MazeCanvas key={theme} causing unnecessary remount",
+      "description": "Remove key={theme} from MazeCanvas to avoid resetting zoom/pan on theme change. Handle theme via redraw instead.",
+      "item_type": "task",
+      "status": "open",
+      "priority": 2,
+      "created_at": "2026-03-08T21:44:04.356299804Z",
+      "updated_at": "2026-03-08T21:44:04.356299804Z"
+    },
     "lb-m6dk": {
       "id": "lb-m6dk",
       "title": "Export maze as PNG image",
@@ -374,6 +384,11 @@
     },
     {
       "from_id": "lb-ilwf",
+      "to_id": "lb-ku28",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-lbkw",
       "to_id": "lb-ku28",
       "dep_type": "parent"
     }
