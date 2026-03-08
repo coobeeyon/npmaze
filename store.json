@@ -70,6 +70,16 @@
       "created_at": "2026-03-08T17:12:45.795078368Z",
       "updated_at": "2026-03-08T17:17:33.951610555Z"
     },
+    "lb-uz63": {
+      "id": "lb-uz63",
+      "title": "Implement 2D non-planar crossings (weave maze)",
+      "description": "Refactor maze generation and rendering to support over/under crossings on a 2D plane (weave style) instead of flat mazes on non-planar manifolds. See SPEC.md for updated requirements.",
+      "item_type": "task",
+      "status": "open",
+      "priority": 0,
+      "created_at": "2026-03-08T18:59:16.214064951Z",
+      "updated_at": "2026-03-08T18:59:16.214064951Z"
+    },
     "lb-voc2": {
       "id": "lb-voc2",
       "title": "Edit mode + additional algorithms",
