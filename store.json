@@ -175,11 +175,10 @@
       "title": "Fix MazeCanvas key={theme} causing unnecessary remount",
       "description": "Remove key={theme} from MazeCanvas to avoid resetting zoom/pan on theme change. Handle theme via redraw instead.",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 2,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T21:44:04.356299804Z",
-      "updated_at": "2026-03-08T21:45:29.418557617Z"
+      "updated_at": "2026-03-08T21:46:14.442683623Z"
     },
     "lb-m6dk": {
       "id": "lb-m6dk",
