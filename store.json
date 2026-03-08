@@ -35,11 +35,10 @@
       "title": "Fix Kruskal's edge deduplication performance",
       "description": "Replace O(n) Array.some() with Set<string> for wall key dedup in Kruskal's algorithm (both instant and animated versions)",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 0,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-08T19:12:56.857032127Z",
-      "updated_at": "2026-03-08T19:13:00.553833571Z"
+      "updated_at": "2026-03-08T19:13:52.461288132Z"
     },
     "lb-88gd": {
       "id": "lb-88gd",
