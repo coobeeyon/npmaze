@@ -9,9 +9,9 @@ export interface GenerationResult {
   crossings: Map<string, CrossingOver>;
 }
 
-function shuffle<T>(arr: T[]): T[] {
+function shuffle<T>(arr: T[], rng: () => number): T[] {
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
@@ -71,7 +71,7 @@ function canTunnel(
 }
 
 /** Recursive backtracker (DFS) maze generation */
-function generateDFS(topology: Topology, weave: boolean = false): GenerationResult {
+function generateDFS(topology: Topology, weave: boolean = false, rng: () => number = Math.random): GenerationResult {
   const walls = createAllWalls(topology);
   const visited = new Set<string>();
   const crossings = new Map<string, CrossingOver>();
@@ -81,8 +81,8 @@ function generateDFS(topology: Topology, weave: boolean = false): GenerationResu
 
   // Start from random cell
   const start: CellCoord = {
-    row: Math.floor(Math.random() * topology.rows),
-    col: Math.floor(Math.random() * topology.cols),
+    row: Math.floor(rng() * topology.rows),
+    col: Math.floor(rng() * topology.cols),
   };
   visited.add(key(start));
   stack.push(start);
@@ -91,7 +91,7 @@ function generateDFS(topology: Topology, weave: boolean = false): GenerationResu
     const current = stack[stack.length - 1];
     const neighbors: { cell: CellCoord; wk: string }[] = [];
 
-    for (const dir of shuffle([...ALL_DIRECTIONS])) {
+    for (const dir of shuffle([...ALL_DIRECTIONS], rng)) {
       const neighbor = topology.neighbor(current, dir);
       if (neighbor && !visited.has(key(neighbor))) {
         neighbors.push({ cell: neighbor, wk: wallKey(current, neighbor) });
@@ -102,7 +102,7 @@ function generateDFS(topology: Topology, weave: boolean = false): GenerationResu
       // Try tunneling if weave is enabled
       if (weave) {
         let tunneled = false;
-        for (const dir of shuffle([...ALL_DIRECTIONS])) {
+        for (const dir of shuffle([...ALL_DIRECTIONS], rng)) {
           const result = canTunnel(current, dir, topology, walls, visited, crossings);
           if (result) {
             const { far, mid } = result;
@@ -176,7 +176,7 @@ function canCreateCrossing(
 }
 
 /** Kruskal's algorithm maze generation */
-function generateKruskal(topology: Topology, weave: boolean = false): GenerationResult {
+function generateKruskal(topology: Topology, weave: boolean = false, rng: () => number = Math.random): GenerationResult {
   const walls = createAllWalls(topology);
   const crossings = new Map<string, CrossingOver>();
   const uf = new UnionFind(topology.rows * topology.cols);
@@ -215,7 +215,7 @@ function generateKruskal(topology: Topology, weave: boolean = false): Generation
     }
   }
 
-  shuffle(edges);
+  shuffle(edges, rng);
 
   for (const edge of edges) {
     if (edge.type === "normal") {
@@ -242,7 +242,7 @@ function generateKruskal(topology: Topology, weave: boolean = false): Generation
 }
 
 /** Prim's algorithm maze generation */
-function generatePrim(topology: Topology, weave: boolean = false): GenerationResult {
+function generatePrim(topology: Topology, weave: boolean = false, rng: () => number = Math.random): GenerationResult {
   const walls = createAllWalls(topology);
   const crossings = new Map<string, CrossingOver>();
   const inMaze = new Set<string>();
@@ -283,14 +283,14 @@ function generatePrim(topology: Topology, weave: boolean = false): GenerationRes
 
   // Start from random cell
   const start: CellCoord = {
-    row: Math.floor(Math.random() * topology.rows),
-    col: Math.floor(Math.random() * topology.cols),
+    row: Math.floor(rng() * topology.rows),
+    col: Math.floor(rng() * topology.cols),
   };
   inMaze.add(key(start));
   addFrontierNeighbors(start);
 
   while (frontier.length > 0) {
-    const idx = Math.floor(Math.random() * frontier.length);
+    const idx = Math.floor(rng() * frontier.length);
     const edge = frontier[idx];
     frontier.splice(idx, 1);
 
@@ -319,14 +319,15 @@ export function generateMaze(
   topology: Topology,
   algorithm: AlgorithmType,
   weave: boolean = false,
+  rng: () => number = Math.random,
 ): GenerationResult {
   switch (algorithm) {
     case "dfs":
-      return generateDFS(topology, weave);
+      return generateDFS(topology, weave, rng);
     case "kruskal":
-      return generateKruskal(topology, weave);
+      return generateKruskal(topology, weave, rng);
     case "prim":
-      return generatePrim(topology, weave);
+      return generatePrim(topology, weave, rng);
   }
 }
 
@@ -337,7 +338,7 @@ export interface AnimationStep {
 }
 
 /** Step-by-step DFS generation for animation */
-function* generateDFSSteps(topology: Topology, weave: boolean = false): Generator<AnimationStep, GenerationResult> {
+function* generateDFSSteps(topology: Topology, weave: boolean = false, rng: () => number = Math.random): Generator<AnimationStep, GenerationResult> {
   const walls = createAllWalls(topology);
   const visited = new Set<string>();
   const crossings = new Map<string, CrossingOver>();
@@ -345,8 +346,8 @@ function* generateDFSSteps(topology: Topology, weave: boolean = false): Generato
   const key = (c: CellCoord) => `${c.row},${c.col}`;
 
   const start: CellCoord = {
-    row: Math.floor(Math.random() * topology.rows),
-    col: Math.floor(Math.random() * topology.cols),
+    row: Math.floor(rng() * topology.rows),
+    col: Math.floor(rng() * topology.cols),
   };
   visited.add(key(start));
   stack.push(start);
@@ -354,7 +355,7 @@ function* generateDFSSteps(topology: Topology, weave: boolean = false): Generato
   while (stack.length > 0) {
     const current = stack[stack.length - 1];
     const neighbors: { cell: CellCoord; wk: string }[] = [];
-    for (const dir of shuffle([...ALL_DIRECTIONS])) {
+    for (const dir of shuffle([...ALL_DIRECTIONS], rng)) {
       const neighbor = topology.neighbor(current, dir);
       if (neighbor && !visited.has(key(neighbor))) {
         neighbors.push({ cell: neighbor, wk: wallKey(current, neighbor) });
@@ -363,7 +364,7 @@ function* generateDFSSteps(topology: Topology, weave: boolean = false): Generato
     if (neighbors.length === 0) {
       if (weave) {
         let tunneled = false;
-        for (const dir of shuffle([...ALL_DIRECTIONS])) {
+        for (const dir of shuffle([...ALL_DIRECTIONS], rng)) {
           const result = canTunnel(current, dir, topology, walls, visited, crossings);
           if (result) {
             const { far, mid } = result;
@@ -400,7 +401,7 @@ function* generateDFSSteps(topology: Topology, weave: boolean = false): Generato
 }
 
 /** Step-by-step Kruskal's generation for animation */
-function* generateKruskalSteps(topology: Topology, weave: boolean = false): Generator<AnimationStep, GenerationResult> {
+function* generateKruskalSteps(topology: Topology, weave: boolean = false, rng: () => number = Math.random): Generator<AnimationStep, GenerationResult> {
   const walls = createAllWalls(topology);
   const crossings = new Map<string, CrossingOver>();
   const uf = new UnionFind(topology.rows * topology.cols);
@@ -433,7 +434,7 @@ function* generateKruskalSteps(topology: Topology, weave: boolean = false): Gene
       }
     }
   }
-  shuffle(edges);
+  shuffle(edges, rng);
 
   for (const edge of edges) {
     if (edge.type === "normal") {
@@ -464,7 +465,7 @@ function* generateKruskalSteps(topology: Topology, weave: boolean = false): Gene
 }
 
 /** Step-by-step Prim's generation for animation */
-function* generatePrimSteps(topology: Topology, weave: boolean = false): Generator<AnimationStep, GenerationResult> {
+function* generatePrimSteps(topology: Topology, weave: boolean = false, rng: () => number = Math.random): Generator<AnimationStep, GenerationResult> {
   const walls = createAllWalls(topology);
   const crossings = new Map<string, CrossingOver>();
   const inMaze = new Set<string>();
@@ -503,14 +504,14 @@ function* generatePrimSteps(topology: Topology, weave: boolean = false): Generat
   }
 
   const start: CellCoord = {
-    row: Math.floor(Math.random() * topology.rows),
-    col: Math.floor(Math.random() * topology.cols),
+    row: Math.floor(rng() * topology.rows),
+    col: Math.floor(rng() * topology.cols),
   };
   inMaze.add(key(start));
   addFrontierNeighbors(start);
 
   while (frontier.length > 0) {
-    const idx = Math.floor(Math.random() * frontier.length);
+    const idx = Math.floor(rng() * frontier.length);
     const edge = frontier[idx];
     frontier.splice(idx, 1);
 
@@ -544,13 +545,14 @@ export function generateMazeSteps(
   topology: Topology,
   algorithm: AlgorithmType,
   weave: boolean = false,
+  rng: () => number = Math.random,
 ): Generator<AnimationStep, GenerationResult> {
   switch (algorithm) {
     case "dfs":
-      return generateDFSSteps(topology, weave);
+      return generateDFSSteps(topology, weave, rng);
     case "kruskal":
-      return generateKruskalSteps(topology, weave);
+      return generateKruskalSteps(topology, weave, rng);
     case "prim":
-      return generatePrimSteps(topology, weave);
+      return generatePrimSteps(topology, weave, rng);
   }
 }

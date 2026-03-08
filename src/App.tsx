@@ -10,6 +10,7 @@ import { TopologyInfo } from "./components/TopologyInfo";
 import { DifficultyPanel } from "./components/DifficultyPanel";
 import { exportMazePNG } from "./rendering/drawMaze";
 import { scoreDifficulty } from "./maze/difficulty";
+import { mulberry32, randomSeed } from "./maze/rng";
 import { useTheme } from "./theme/useTheme";
 import "./App.css";
 
@@ -19,11 +20,13 @@ const DEFAULT_CONFIG: MazeConfig = {
   surface: "rectangle",
   algorithm: "dfs",
   weave: false,
+  seed: randomSeed(),
 };
 
 function createMaze(config: MazeConfig): MazeState {
   const topology = createTopology(config.surface, config.rows, config.cols);
-  const result = generateMaze(topology, config.algorithm, config.weave);
+  const rng = mulberry32(config.seed);
+  const result = generateMaze(topology, config.algorithm, config.weave, rng);
   return { config, walls: result.walls, crossings: result.crossings };
 }
 
@@ -75,7 +78,10 @@ export default function App() {
   const handleGenerate = useCallback(() => {
     stopAnimation();
     stopSolverAnimation();
-    setMaze(createMaze(config));
+    const newSeed = randomSeed();
+    const newConfig = { ...config, seed: newSeed };
+    setConfig(newConfig);
+    setMaze(createMaze(newConfig));
     setEditMode(false);
     setShowSolution(false);
     setExploredCells(null);
@@ -96,11 +102,15 @@ export default function App() {
     setEnd({ row: config.rows - 1, col: config.cols - 1 });
     setPlacementMode(null);
 
-    const topology = createTopology(config.surface, config.rows, config.cols);
+    const newSeed = randomSeed();
+    const newConfig = { ...config, seed: newSeed };
+    setConfig(newConfig);
+    const topology = createTopology(newConfig.surface, newConfig.rows, newConfig.cols);
     const allWalls = createAllWalls(topology);
-    const gen = generateMazeSteps(topology, config.algorithm, config.weave);
+    const rng = mulberry32(newSeed);
+    const gen = generateMazeSteps(topology, newConfig.algorithm, newConfig.weave, rng);
 
-    setMaze({ config, walls: allWalls, crossings: new Map() });
+    setMaze({ config: newConfig, walls: allWalls, crossings: new Map() });
     setAnimating(true);
 
     // Process multiple steps per frame for larger mazes

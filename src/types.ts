@@ -20,6 +20,7 @@ export interface MazeConfig {
   surface: SurfaceType;
   algorithm: AlgorithmType;
   weave: boolean;
+  seed: number;
 }
 
 /** Crossing orientation: which passage goes over */

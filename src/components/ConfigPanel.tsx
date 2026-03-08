@@ -166,6 +166,27 @@ export function ConfigPanel({
         </span>
       </div>
 
+      <div className="config-section">
+        <label className="config-label" htmlFor="seed-input">Seed</label>
+        <div style={{ display: "flex", gap: "4px" }}>
+          <input
+            id="seed-input"
+            className="config-select"
+            style={{ flex: 1, fontFamily: "monospace", fontSize: "0.8rem" }}
+            value={config.seed.toString(16).toUpperCase()}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 16);
+              if (!isNaN(val)) {
+                onConfigChange({ ...config, seed: val >>> 0 });
+              }
+            }}
+          />
+        </div>
+        <span className="config-desc">
+          Enter a hex seed to reproduce a maze
+        </span>
+      </div>
+
       <div className="config-buttons">
         <button className="btn btn-primary" onClick={onGenerate} disabled={animating}>
           Generate Maze
