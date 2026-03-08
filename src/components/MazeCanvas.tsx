@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import type { CellCoord, MazeState } from "../types";
+import type { ThemeMode } from "../theme/colors";
 import { drawMaze, hitTestWall, hitTestCell } from "../rendering/drawMaze";
 
 export type PlacementMode = "start" | "end" | null;
@@ -14,9 +15,10 @@ interface MazeCanvasProps {
   onToggleWall: (wallKey: string) => void;
   onPlaceCell: (cell: CellCoord) => void;
   exploredCells?: Set<string> | null;
+  theme?: ThemeMode;
 }
 
-export function MazeCanvas({ maze, editMode, solutionPath, start, end, placementMode, onToggleWall, onPlaceCell, exploredCells = null }: MazeCanvasProps) {
+export function MazeCanvas({ maze, editMode, solutionPath, start, end, placementMode, onToggleWall, onPlaceCell, exploredCells = null, theme }: MazeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredWall, setHoveredWall] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -71,7 +73,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
 
     drawMaze(ctx, maze, editMode, hoveredWall, solutionPath, start, end, exploredCells);
     ctx.restore();
-  }, [maze, editMode, hoveredWall, solutionPath, start, end, exploredCells, zoom, panX, panY]);
+  }, [maze, editMode, hoveredWall, solutionPath, start, end, exploredCells, zoom, panX, panY, theme]);
 
   useEffect(() => {
     redraw();

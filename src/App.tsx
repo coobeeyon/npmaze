@@ -320,7 +320,7 @@ export default function App() {
 
         <main className="maze-container">
           <MazeCanvas
-            key={theme}
+            theme={theme}
             maze={maze}
             editMode={editMode}
             solutionPath={solutionPath}
