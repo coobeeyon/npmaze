@@ -159,6 +159,16 @@
       "created_at": "2026-03-08T19:35:30.739048875Z",
       "updated_at": "2026-03-08T19:36:36.997215683Z"
     },
+    "lb-bqnl": {
+      "id": "lb-bqnl",
+      "title": "Add keyboard shortcut hints",
+      "description": "Show keyboard shortcut hints (Ctrl+Z/Y for undo/redo in edit mode, mouse controls for zoom/pan) somewhere in the UI, e.g. a collapsible help section.",
+      "item_type": "task",
+      "status": "open",
+      "priority": 3,
+      "created_at": "2026-03-08T22:27:21.916244221Z",
+      "updated_at": "2026-03-08T22:27:21.916244221Z"
+    },
     "lb-cg1b": {
       "id": "lb-cg1b",
       "title": "Keyboard accessibility + responsive polish",
