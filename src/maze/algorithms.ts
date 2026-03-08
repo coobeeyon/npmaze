@@ -158,3 +158,122 @@ export function generateMaze(
       return generatePrim(topology);
   }
 }
+
+/** Step-by-step DFS generation for animation */
+function* generateDFSSteps(topology: Topology): Generator<string, Set<string>> {
+  const walls = createAllWalls(topology);
+  const visited = new Set<string>();
+  const stack: CellCoord[] = [];
+  const key = (c: CellCoord) => `${c.row},${c.col}`;
+
+  const start: CellCoord = {
+    row: Math.floor(Math.random() * topology.rows),
+    col: Math.floor(Math.random() * topology.cols),
+  };
+  visited.add(key(start));
+  stack.push(start);
+
+  while (stack.length > 0) {
+    const current = stack[stack.length - 1];
+    const neighbors: { cell: CellCoord; wk: string }[] = [];
+    for (const dir of shuffle([...ALL_DIRECTIONS])) {
+      const neighbor = topology.neighbor(current, dir);
+      if (neighbor && !visited.has(key(neighbor))) {
+        neighbors.push({ cell: neighbor, wk: wallKey(current, neighbor) });
+      }
+    }
+    if (neighbors.length === 0) {
+      stack.pop();
+    } else {
+      const chosen = neighbors[0];
+      walls.delete(chosen.wk);
+      visited.add(key(chosen.cell));
+      stack.push(chosen.cell);
+      yield chosen.wk;
+    }
+  }
+  return walls;
+}
+
+/** Step-by-step Kruskal's generation for animation */
+function* generateKruskalSteps(topology: Topology): Generator<string, Set<string>> {
+  const walls = createAllWalls(topology);
+  const uf = new UnionFind(topology.rows * topology.cols);
+  const edges: { a: CellCoord; b: CellCoord; wk: string }[] = [];
+  for (let row = 0; row < topology.rows; row++) {
+    for (let col = 0; col < topology.cols; col++) {
+      const cell: CellCoord = { row, col };
+      for (const dir of ALL_DIRECTIONS) {
+        const neighbor = topology.neighbor(cell, dir);
+        if (neighbor) {
+          const wk = wallKey(cell, neighbor);
+          if (!edges.some((e) => e.wk === wk)) {
+            edges.push({ a: cell, b: neighbor, wk });
+          }
+        }
+      }
+    }
+  }
+  shuffle(edges);
+  for (const edge of edges) {
+    const ia = cellIndex(edge.a, topology.cols);
+    const ib = cellIndex(edge.b, topology.cols);
+    if (uf.union(ia, ib)) {
+      walls.delete(edge.wk);
+      yield edge.wk;
+    }
+  }
+  return walls;
+}
+
+/** Step-by-step Prim's generation for animation */
+function* generatePrimSteps(topology: Topology): Generator<string, Set<string>> {
+  const walls = createAllWalls(topology);
+  const inMaze = new Set<string>();
+  const frontier: { cell: CellCoord; from: CellCoord; wk: string }[] = [];
+  const key = (c: CellCoord) => `${c.row},${c.col}`;
+
+  const start: CellCoord = {
+    row: Math.floor(Math.random() * topology.rows),
+    col: Math.floor(Math.random() * topology.cols),
+  };
+  inMaze.add(key(start));
+  for (const dir of ALL_DIRECTIONS) {
+    const neighbor = topology.neighbor(start, dir);
+    if (neighbor) {
+      frontier.push({ cell: neighbor, from: start, wk: wallKey(start, neighbor) });
+    }
+  }
+
+  while (frontier.length > 0) {
+    const idx = Math.floor(Math.random() * frontier.length);
+    const edge = frontier[idx];
+    frontier.splice(idx, 1);
+    if (inMaze.has(key(edge.cell))) continue;
+    inMaze.add(key(edge.cell));
+    walls.delete(edge.wk);
+    yield edge.wk;
+    for (const dir of ALL_DIRECTIONS) {
+      const neighbor = topology.neighbor(edge.cell, dir);
+      if (neighbor && !inMaze.has(key(neighbor))) {
+        frontier.push({ cell: neighbor, from: edge.cell, wk: wallKey(edge.cell, neighbor) });
+      }
+    }
+  }
+  return walls;
+}
+
+/** Create a step-by-step generator for animated maze generation */
+export function generateMazeSteps(
+  topology: Topology,
+  algorithm: AlgorithmType,
+): Generator<string, Set<string>> {
+  switch (algorithm) {
+    case "dfs":
+      return generateDFSSteps(topology);
+    case "kruskal":
+      return generateKruskalSteps(topology);
+    case "prim":
+      return generatePrimSteps(topology);
+  }
+}

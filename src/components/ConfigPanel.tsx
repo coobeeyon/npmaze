@@ -4,8 +4,11 @@ interface ConfigPanelProps {
   config: MazeConfig;
   editMode: boolean;
   showSolution: boolean;
+  animating: boolean;
   onConfigChange: (config: MazeConfig) => void;
   onGenerate: () => void;
+  onAnimate: () => void;
+  onStopAnimation: () => void;
   onToggleEdit: () => void;
   onToggleSolution: () => void;
 }
@@ -28,8 +31,11 @@ export function ConfigPanel({
   config,
   editMode,
   showSolution,
+  animating,
   onConfigChange,
   onGenerate,
+  onAnimate,
+  onStopAnimation,
   onToggleEdit,
   onToggleSolution,
 }: ConfigPanelProps) {
@@ -108,8 +114,14 @@ export function ConfigPanel({
       </div>
 
       <div className="config-buttons">
-        <button className="btn btn-primary" onClick={onGenerate}>
+        <button className="btn btn-primary" onClick={onGenerate} disabled={animating}>
           Generate Maze
+        </button>
+        <button
+          className={`btn ${animating ? "btn-active" : "btn-secondary"}`}
+          onClick={animating ? onStopAnimation : onAnimate}
+        >
+          {animating ? "Stop Animation" : "Animate"}
         </button>
         <button
           className={`btn ${editMode ? "btn-active" : "btn-secondary"}`}
