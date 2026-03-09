@@ -189,6 +189,16 @@
       "created_at": "2026-03-08T19:26:08.903056473Z",
       "updated_at": "2026-03-08T19:29:53.496351793Z"
     },
+    "lb-ibvq": {
+      "id": "lb-ibvq",
+      "title": "Weave Maze App Overhaul",
+      "description": "Transform the app to be a true weave maze generator. A weave maze is a PLANAR rectangle maze where paths can go over and under each other at crossing cells. Remove all non-planar topology options (cylinder, torus, Möbius, Klein). The maze is always a rectangle; the interesting feature is paths crossing over/under. Implement smooth bezier corridor rendering matching public/npmaze-reference.svg (quarter-circle wall curves). Update skinny pig theme to make clear these are hairless guinea pigs, referencing src/assets/skinny-pig.jpg.",
+      "item_type": "epic",
+      "status": "open",
+      "priority": 1,
+      "created_at": "2026-03-09T13:11:29.334707934Z",
+      "updated_at": "2026-03-09T13:11:29.334707934Z"
+    },
     "lb-ilwf": {
       "id": "lb-ilwf",
       "title": "Improve ARIA labels and screen reader support",
