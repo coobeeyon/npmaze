@@ -475,11 +475,10 @@
       "title": "Remove surface selector and TopologyInfo from UI",
       "description": "In src/components/ConfigPanel.tsx: remove the SURFACES array, the surface <select> dropdown, and surface-related desc text. Remove SurfaceType import. In src/components/TopologyInfo.tsx: delete the file entirely (it explains non-planar topologies, which no longer exist). In src/App.tsx: remove the <TopologyInfo> import and its use in the sidebar.",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 1,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:11:44.948020447Z",
-      "updated_at": "2026-03-09T13:24:00.792783184Z"
+      "updated_at": "2026-03-09T13:27:25.490654326Z"
     },
     "lb-wpzg": {
       "id": "lb-wpzg",
