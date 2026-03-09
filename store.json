@@ -124,10 +124,10 @@
       "title": "Skinny pig theme refresh",
       "description": "Make it unambiguous that a Skinny Pig is a hairless guinea pig. The reference photo is in src/assets/skinny-pig.jpg. Update branding, mascot, and UI copy accordingly.",
       "item_type": "epic",
-      "status": "open",
+      "status": "closed",
       "priority": 2,
       "created_at": "2026-03-09T13:12:54.144656871Z",
-      "updated_at": "2026-03-09T13:12:54.144656871Z"
+      "updated_at": "2026-03-09T13:41:29.319096269Z"
     },
     "lb-88gd": {
       "id": "lb-88gd",
