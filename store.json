@@ -357,8 +357,9 @@
       "item_type": "task",
       "status": "open",
       "priority": 1,
+      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:12:19.042752058Z",
-      "updated_at": "2026-03-09T13:12:19.042752058Z"
+      "updated_at": "2026-03-09T13:28:35.281722830Z"
     },
     "lb-nkk2": {
       "id": "lb-nkk2",
