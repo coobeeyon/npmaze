@@ -235,11 +235,10 @@
       "title": "Update solution path and explored cells for bezier renderer",
       "description": "After switching to wall-path rendering, update how the solution path and solver animation explored cells are drawn. Solution path: draw a thick colored stroke along cell centers (moveTo/lineTo through solution cell sequence), lineWidth about 40% of cellSize, lineCap='round', lineJoin='round', semi-transparent. This already mostly works but verify it looks good with the new background style. Explored cells: instead of filling rectangles, draw a semi-transparent filled circle or rounded square at each explored cell center (radius = 35% of cellSize). This integrates better with the wall-based aesthetic.",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 1,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:12:50.718326648Z",
-      "updated_at": "2026-03-09T13:34:55.084981934Z"
+      "updated_at": "2026-03-09T13:34:57.401863092Z"
     },
     "lb-ffqj": {
       "id": "lb-ffqj",
