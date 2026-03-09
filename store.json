@@ -369,6 +369,16 @@
       "created_at": "2026-03-08T18:59:16.214064951Z",
       "updated_at": "2026-03-08T19:09:50.164710994Z"
     },
+    "lb-vewa": {
+      "id": "lb-vewa",
+      "title": "Add crossingDensity to MazeConfig and default weave=true",
+      "description": "In src/types.ts: add 'crossingDensity: number' (0.0 to 1.0) to MazeConfig. In App.tsx: set DEFAULT_CONFIG weave=true, crossingDensity=0.5. This makes weave mazes the default experience. crossingDensity controls what fraction of eligible crossing positions actually become crossings during generation.",
+      "item_type": "task",
+      "status": "open",
+      "priority": 1,
+      "created_at": "2026-03-09T13:11:57.488224170Z",
+      "updated_at": "2026-03-09T13:11:57.488224170Z"
+    },
     "lb-voc2": {
       "id": "lb-voc2",
       "title": "Edit mode + additional algorithms",
@@ -554,6 +564,11 @@
     {
       "from_id": "lb-g3cf",
       "to_id": "lb-ibvq",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-vewa",
+      "to_id": "lb-g3cf",
       "dep_type": "parent"
     }
   ]
