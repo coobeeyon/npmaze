@@ -14,10 +14,11 @@ const LIGHT = {
   pigDark: "#C4A882",
 
   // Maze colors
-  wallColor: "#8B6F5E", // warm brown
+  wallColor: "#7A5F4E", // warm brown (darkened for better contrast with corridors)
   wallHover: "#D4886B", // highlighted wall
   pathColor: "#FFF5EE",
   cellBg: "#FFFAF5",
+  bridgeShadow: "rgba(93, 64, 55, 0.15)", // subtle shadow for crossing underpasses
 
   // UI accents
   accent: "#D4886B", // warm coral
@@ -47,10 +48,11 @@ const DARK = {
   pigDark: "#8A7560",
 
   // Maze colors
-  wallColor: "#B09080", // lighter brown on dark
+  wallColor: "#C0A090", // lighter brown on dark (brightened for better contrast)
   wallHover: "#E8A080",
   pathColor: "#1A1210",
-  cellBg: "#2E2220",
+  cellBg: "#2A1E1A",
+  bridgeShadow: "rgba(0, 0, 0, 0.2)", // subtle shadow for crossing underpasses
 
   // UI accents
   accent: "#E8A080",

@@ -216,19 +216,18 @@ function drawCrossingCell(
 
     // 1. Draw the underpass (N-S corridor through the cell)
     ctx.fillStyle = COLORS.cellBg;
-    // Full N-S corridor extending to cell edges (no walls N or S in a crossing)
     ctx.fillRect(x + wh, y, corridorWidth, cellSize);
 
-    // 2. Draw bridge walls across the underpass
-    ctx.fillStyle = COLORS.wallColor;
-    const bridgeTop = y + wh;
-    const bridgeBottom = y + cellSize - wh;
-    // Top bridge wall
-    ctx.fillRect(x + wh, bridgeTop, corridorWidth, wh);
-    // Bottom bridge wall
-    ctx.fillRect(x + wh, bridgeBottom - wh, corridorWidth, wh);
+    // 2. Shadow on underpass for depth
+    ctx.fillStyle = COLORS.bridgeShadow;
+    ctx.fillRect(x + wh, y + wh, corridorWidth, corridorWidth);
 
-    // 3. Draw the overpass (E-W corridor on top, covering bridge area)
+    // 3. Draw bridge walls across the underpass
+    ctx.fillStyle = COLORS.wallColor;
+    ctx.fillRect(x + wh, y + wh, corridorWidth, wh);
+    ctx.fillRect(x + wh, y + cellSize - 2 * wh, corridorWidth, wh);
+
+    // 4. Draw the overpass (E-W corridor on top, covering bridge area)
     ctx.fillStyle = COLORS.cellBg;
     ctx.fillRect(x, y + wh, cellSize, corridorWidth);
   } else {
@@ -238,12 +237,16 @@ function drawCrossingCell(
     ctx.fillStyle = COLORS.cellBg;
     ctx.fillRect(x, y + wh, cellSize, corridorWidth);
 
-    // 2. Draw bridge walls
+    // 2. Shadow on underpass for depth
+    ctx.fillStyle = COLORS.bridgeShadow;
+    ctx.fillRect(x + wh, y + wh, corridorWidth, corridorWidth);
+
+    // 3. Draw bridge walls
     ctx.fillStyle = COLORS.wallColor;
     ctx.fillRect(x + wh, y + wh, wh, corridorWidth);
     ctx.fillRect(x + cellSize - 2 * wh, y + wh, wh, corridorWidth);
 
-    // 3. Draw the overpass (N-S corridor on top)
+    // 4. Draw the overpass (N-S corridor on top)
     ctx.fillStyle = COLORS.cellBg;
     ctx.fillRect(x + wh, y, corridorWidth, cellSize);
   }
