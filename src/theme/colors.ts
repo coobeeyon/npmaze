@@ -19,13 +19,6 @@ const LIGHT = {
   pathColor: "#FFF5EE",
   cellBg: "#FFFAF5",
 
-  // Wrap indicators
-  wrapNorth: "#E88D9E", // soft rose
-  wrapSouth: "#9ED4E8", // soft blue
-  wrapEast: "#B5E89E", // soft green
-  wrapWest: "#E8D49E", // soft gold
-  wrapFlip: "#D49EE8", // soft purple (for flip indicators)
-
   // UI accents
   accent: "#D4886B", // warm coral
   accentHover: "#C47A5E",
@@ -58,13 +51,6 @@ const DARK = {
   wallHover: "#E8A080",
   pathColor: "#1A1210",
   cellBg: "#2E2220",
-
-  // Wrap indicators
-  wrapNorth: "#C06070",
-  wrapSouth: "#6098B0",
-  wrapEast: "#80B070",
-  wrapWest: "#B0A060",
-  wrapFlip: "#A070C0",
 
   // UI accents
   accent: "#E8A080",

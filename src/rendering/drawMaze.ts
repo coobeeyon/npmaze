@@ -1,5 +1,5 @@
 import type { CellCoord, CrossingOver, Direction, MazeState } from "../types";
-import { type Topology, ALL_DIRECTIONS, createTopology } from "../maze/topology";
+import { type Topology, ALL_DIRECTIONS, rectangleTopology } from "../maze/topology";
 import { wallKey } from "../maze/walls";
 import { COLORS } from "../theme/colors";
 
@@ -97,91 +97,6 @@ function drawCarrot(
   ctx.ellipse(cx + s * 0.15, cy - s * 0.5, s * 0.1, s * 0.25, 0.3, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-}
-
-/** Get wrap indicator color for a direction */
-function wrapColor(dir: Direction): string {
-  switch (dir) {
-    case "north": return COLORS.wrapNorth;
-    case "south": return COLORS.wrapSouth;
-    case "east": return COLORS.wrapEast;
-    case "west": return COLORS.wrapWest;
-  }
-}
-
-/** Draw wrap indicators on edges that connect across the surface */
-function drawWrapIndicators(
-  ctx: CanvasRenderingContext2D,
-  topology: Topology,
-  opts: DrawOptions,
-) {
-  const { cellSize, offsetX, offsetY } = opts;
-  const indicatorSize = 6;
-
-  for (let row = 0; row < topology.rows; row++) {
-    for (let col = 0; col < topology.cols; col++) {
-      const cell: CellCoord = { row, col };
-      const x = offsetX + col * cellSize;
-      const y = offsetY + row * cellSize;
-
-      for (const dir of ALL_DIRECTIONS) {
-        const neighbor = topology.neighbor(cell, dir);
-        if (!neighbor) continue;
-
-        // Check if this is a wrap (neighbor isn't simply adjacent)
-        const isWrap =
-          (dir === "north" && neighbor.row !== row - 1) ||
-          (dir === "south" && neighbor.row !== row + 1) ||
-          (dir === "west" && neighbor.col !== col - 1) ||
-          (dir === "east" && neighbor.col !== col + 1);
-
-        if (!isWrap) continue;
-
-        // Check if the wrap also flips
-        const isFlip =
-          (dir === "east" || dir === "west") &&
-          neighbor.row !== row;
-
-        const color = isFlip ? COLORS.wrapFlip : wrapColor(dir);
-        ctx.fillStyle = color;
-
-        // Draw small triangle indicators at the edge
-        ctx.beginPath();
-        switch (dir) {
-          case "north": {
-            const cx = x + cellSize / 2;
-            ctx.moveTo(cx - indicatorSize, y + 1);
-            ctx.lineTo(cx + indicatorSize, y + 1);
-            ctx.lineTo(cx, y - indicatorSize + 1);
-            break;
-          }
-          case "south": {
-            const cx = x + cellSize / 2;
-            ctx.moveTo(cx - indicatorSize, y + cellSize - 1);
-            ctx.lineTo(cx + indicatorSize, y + cellSize - 1);
-            ctx.lineTo(cx, y + cellSize + indicatorSize - 1);
-            break;
-          }
-          case "west": {
-            const cy = y + cellSize / 2;
-            ctx.moveTo(x + 1, cy - indicatorSize);
-            ctx.lineTo(x + 1, cy + indicatorSize);
-            ctx.lineTo(x - indicatorSize + 1, cy);
-            break;
-          }
-          case "east": {
-            const cy = y + cellSize / 2;
-            ctx.moveTo(x + cellSize - 1, cy - indicatorSize);
-            ctx.lineTo(x + cellSize - 1, cy + indicatorSize);
-            ctx.lineTo(x + cellSize + indicatorSize - 1, cy);
-            break;
-          }
-        }
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-  }
 }
 
 /**
@@ -301,7 +216,7 @@ export function drawMaze(
   exploredCells: Set<string> | null = null,
 ) {
   const { config, walls } = maze;
-  const topology = createTopology(config.surface, config.rows, config.cols);
+  const topology = rectangleTopology(config.rows, config.cols);
   const canvas = ctx.canvas;
   const opts = getDrawOptions(ctx, config.rows, config.cols);
   const { cellSize, offsetX, offsetY } = opts;
@@ -455,8 +370,6 @@ export function drawMaze(
     ctx.globalAlpha = 1;
   }
 
-  // Draw wrap indicators
-  drawWrapIndicators(ctx, topology, opts);
 }
 
 /** Hit test: given a click position, find which cell was clicked */
@@ -519,7 +432,7 @@ export function exportMazeSVG(
   end: CellCoord = { row: maze.config.rows - 1, col: maze.config.cols - 1 },
 ) {
   const { config, walls } = maze;
-  const topology = createTopology(config.surface, config.rows, config.cols);
+  const topology = rectangleTopology(config.rows, config.cols);
   const cellSize = 30;
   const padding = 40;
   const width = cellSize * config.cols + padding * 2;
@@ -620,9 +533,6 @@ export function exportMazeSVG(
       );
     }
   }
-
-  // Wrap indicators
-  parts.push(svgWrapIndicators(topology, cellSize, offsetX, offsetY));
 
   parts.push("</svg>");
 
@@ -747,68 +657,6 @@ function svgCrossings(
   return parts.join("\n");
 }
 
-function svgWrapIndicators(
-  topology: Topology,
-  cellSize: number,
-  offsetX: number,
-  offsetY: number,
-): string {
-  const parts: string[] = [];
-  const indicatorSize = 6;
-
-  for (let row = 0; row < topology.rows; row++) {
-    for (let col = 0; col < topology.cols; col++) {
-      const cell: CellCoord = { row, col };
-      const x = offsetX + col * cellSize;
-      const y = offsetY + row * cellSize;
-
-      for (const dir of ALL_DIRECTIONS) {
-        const neighbor = topology.neighbor(cell, dir);
-        if (!neighbor) continue;
-
-        const isWrap =
-          (dir === "north" && neighbor.row !== row - 1) ||
-          (dir === "south" && neighbor.row !== row + 1) ||
-          (dir === "west" && neighbor.col !== col - 1) ||
-          (dir === "east" && neighbor.col !== col + 1);
-
-        if (!isWrap) continue;
-
-        const isFlip =
-          (dir === "east" || dir === "west") && neighbor.row !== row;
-
-        const color = isFlip ? COLORS.wrapFlip : wrapColor(dir);
-
-        let points = "";
-        switch (dir) {
-          case "north": {
-            const cx = x + cellSize / 2;
-            points = `${cx - indicatorSize},${y + 1} ${cx + indicatorSize},${y + 1} ${cx},${y - indicatorSize + 1}`;
-            break;
-          }
-          case "south": {
-            const cx = x + cellSize / 2;
-            points = `${cx - indicatorSize},${y + cellSize - 1} ${cx + indicatorSize},${y + cellSize - 1} ${cx},${y + cellSize + indicatorSize - 1}`;
-            break;
-          }
-          case "west": {
-            const cy = y + cellSize / 2;
-            points = `${x + 1},${cy - indicatorSize} ${x + 1},${cy + indicatorSize} ${x - indicatorSize + 1},${cy}`;
-            break;
-          }
-          case "east": {
-            const cy = y + cellSize / 2;
-            points = `${x + cellSize - 1},${cy - indicatorSize} ${x + cellSize - 1},${cy + indicatorSize} ${x + cellSize + indicatorSize - 1},${cy}`;
-            break;
-          }
-        }
-        parts.push(`<polygon points="${points}" fill="${color}"/>`);
-      }
-    }
-  }
-  return parts.join("\n");
-}
-
 /** Hit test: given a click position, find the nearest wall key */
 export function hitTestWall(
   x: number,
@@ -818,7 +666,7 @@ export function hitTestWall(
   canvasHeight: number,
 ): string | null {
   const { config } = maze;
-  const topology = createTopology(config.surface, config.rows, config.cols);
+  const topology = rectangleTopology(config.rows, config.cols);
 
   // Recalculate drawing params
   const maxCellW = (canvasWidth - 60) / config.cols;

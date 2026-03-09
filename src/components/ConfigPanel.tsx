@@ -1,4 +1,4 @@
-import type { MazeConfig, SurfaceType, AlgorithmType } from "../types";
+import type { MazeConfig, AlgorithmType } from "../types";
 import type { PlacementMode } from "./MazeCanvas";
 
 interface ConfigPanelProps {
@@ -22,14 +22,6 @@ interface ConfigPanelProps {
   onCopyLink: () => void;
   linkCopied: boolean;
 }
-
-const SURFACES: { value: SurfaceType; label: string; desc: string }[] = [
-  { value: "rectangle", label: "Rectangle", desc: "Flat, bounded maze" },
-  { value: "cylinder", label: "Cylinder", desc: "Left-right edges connect" },
-  { value: "torus", label: "Torus", desc: "All edges wrap around" },
-  { value: "mobius", label: "Möbius Strip", desc: "Left-right edges connect with flip" },
-  { value: "klein", label: "Klein Bottle", desc: "Left-right flip + top-bottom wrap" },
-];
 
 const SIZE_PRESETS: { label: string; rows: number; cols: number }[] = [
   { label: "Small", rows: 8, cols: 10 },
@@ -66,27 +58,6 @@ export function ConfigPanel({
 }: ConfigPanelProps) {
   return (
     <div className="config-panel" role="form" aria-label="Maze configuration">
-      <div className="config-section">
-        <label className="config-label" htmlFor="surface-select">Surface</label>
-        <select
-          id="surface-select"
-          className="config-select"
-          value={config.surface}
-          onChange={(e) =>
-            onConfigChange({ ...config, surface: e.target.value as SurfaceType })
-          }
-        >
-          {SURFACES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-        <span className="config-desc">
-          {SURFACES.find((s) => s.value === config.surface)?.desc}
-        </span>
-      </div>
-
       <div className="config-section">
         <label className="config-label">
           Rows: {config.rows}

@@ -41,7 +41,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
   const prevConfigRef = useRef(maze.config);
   useEffect(() => {
     const prev = prevConfigRef.current;
-    if (prev.rows !== maze.config.rows || prev.cols !== maze.config.cols || prev.surface !== maze.config.surface) {
+    if (prev.rows !== maze.config.rows || prev.cols !== maze.config.cols) {
       setZoom(1);
       setPanX(0);
       setPanY(0);
@@ -351,7 +351,7 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
         ref={canvasRef}
         className="maze-canvas"
         role="img"
-        aria-label={`${maze.config.rows} by ${maze.config.cols} maze on a ${maze.config.surface} surface${editMode ? ", edit mode active — click walls to toggle" : placementMode ? `, placing ${placementMode} point — click a cell` : ""}`}
+        aria-label={`${maze.config.rows} by ${maze.config.cols} maze${editMode ? ", edit mode active — click walls to toggle" : placementMode ? `, placing ${placementMode} point — click a cell` : ""}`}
         tabIndex={0}
         style={{
           width: "100%",

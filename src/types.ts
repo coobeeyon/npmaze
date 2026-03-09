@@ -5,19 +5,11 @@ export interface CellCoord {
   col: number;
 }
 
-export type SurfaceType =
-  | "rectangle"
-  | "cylinder"
-  | "torus"
-  | "mobius"
-  | "klein";
-
 export type AlgorithmType = "dfs" | "kruskal" | "prim";
 
 export interface MazeConfig {
   rows: number;
   cols: number;
-  surface: SurfaceType;
   algorithm: AlgorithmType;
   weave: boolean;
   seed: number;

@@ -1,12 +1,11 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import type { CellCoord, MazeConfig, MazeState } from "./types";
-import { createTopology } from "./maze/topology";
+import { rectangleTopology } from "./maze/topology";
 import { generateMaze, generateMazeSteps } from "./maze/algorithms";
 import { createAllWalls } from "./maze/walls";
 import { solveMaze, solveMazeSteps } from "./maze/solver";
 import { MazeCanvas, type PlacementMode } from "./components/MazeCanvas";
 import { ConfigPanel } from "./components/ConfigPanel";
-import { TopologyInfo } from "./components/TopologyInfo";
 import { DifficultyPanel } from "./components/DifficultyPanel";
 import { ShortcutHelp } from "./components/ShortcutHelp";
 import { exportMazePNG, exportMazeSVG } from "./rendering/drawMaze";
@@ -18,7 +17,6 @@ import "./App.css";
 const DEFAULT_CONFIG: MazeConfig = {
   rows: 12,
   cols: 16,
-  surface: "rectangle",
   algorithm: "dfs",
   weave: false,
   seed: randomSeed(),
@@ -47,11 +45,6 @@ function parseConfigFromURL(): MazeConfig {
     if (val >= 3 && val <= 40) config.cols = val;
   }
 
-  const surface = params.get("surface");
-  if (surface && ["rectangle", "cylinder", "torus", "mobius", "klein"].includes(surface)) {
-    config.surface = surface as MazeConfig["surface"];
-  }
-
   const algorithm = params.get("algo");
   if (algorithm && ["dfs", "kruskal", "prim"].includes(algorithm)) {
     config.algorithm = algorithm as MazeConfig["algorithm"];
@@ -70,14 +63,13 @@ function buildShareURL(config: MazeConfig): string {
   params.set("seed", config.seed.toString(16).toUpperCase());
   params.set("rows", config.rows.toString());
   params.set("cols", config.cols.toString());
-  if (config.surface !== "rectangle") params.set("surface", config.surface);
   if (config.algorithm !== "dfs") params.set("algo", config.algorithm);
   if (config.weave) params.set("weave", "1");
   return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 }
 
 function createMaze(config: MazeConfig): MazeState {
-  const topology = createTopology(config.surface, config.rows, config.cols);
+  const topology = rectangleTopology(config.rows, config.cols);
   const rng = mulberry32(config.seed);
   const result = generateMaze(topology, config.algorithm, config.weave, rng);
   return { config, walls: result.walls, crossings: result.crossings };
@@ -103,12 +95,12 @@ export default function App() {
 
   const solutionPath = useMemo<CellCoord[] | null>(() => {
     if (!showSolution) return null;
-    const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
+    const topology = rectangleTopology(maze.config.rows, maze.config.cols);
     return solveMaze(topology, maze.walls, start, end, maze.crossings);
   }, [showSolution, maze, start, end]);
 
   const difficulty = useMemo(() => {
-    const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
+    const topology = rectangleTopology(maze.config.rows, maze.config.cols);
     const path = solveMaze(topology, maze.walls, start, end, maze.crossings);
     return scoreDifficulty(topology, maze.walls, path);
   }, [maze, start, end]);
@@ -161,7 +153,7 @@ export default function App() {
     const newConfig = { ...config, seed: newSeed };
     setConfig(newConfig);
     window.history.replaceState(null, "", buildShareURL(newConfig));
-    const topology = createTopology(newConfig.surface, newConfig.rows, newConfig.cols);
+    const topology = rectangleTopology(newConfig.rows, newConfig.cols);
     const allWalls = createAllWalls(topology);
     const rng = mulberry32(newSeed);
     const gen = generateMazeSteps(topology, newConfig.algorithm, newConfig.weave, rng);
@@ -221,7 +213,7 @@ export default function App() {
     setShowSolution(false);
     setExploredCells(new Set());
 
-    const topology = createTopology(maze.config.surface, maze.config.rows, maze.config.cols);
+    const topology = rectangleTopology(maze.config.rows, maze.config.cols);
     const gen = solveMazeSteps(topology, maze.walls, start, end, maze.crossings);
 
     setSolvingAnimating(true);
@@ -387,7 +379,6 @@ export default function App() {
             onCopyLink={handleCopyLink}
             linkCopied={linkCopied}
           />
-          <TopologyInfo surface={config.surface} />
           <DifficultyPanel score={difficulty} />
           <ShortcutHelp />
         </aside>
