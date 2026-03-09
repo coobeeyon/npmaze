@@ -57,8 +57,9 @@
       "item_type": "task",
       "status": "open",
       "priority": 1,
+      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:12:44.988666203Z",
-      "updated_at": "2026-03-09T13:12:44.988666203Z"
+      "updated_at": "2026-03-09T13:34:56.605891778Z"
     },
     "lb-2ejg": {
       "id": "lb-2ejg",
