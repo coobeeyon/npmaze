@@ -10,6 +10,16 @@
       "created_at": "2026-03-08T21:44:04.340720289Z",
       "updated_at": "2026-03-08T21:44:42.201228685Z"
     },
+    "lb-11v3": {
+      "id": "lb-11v3",
+      "title": "Remove SurfaceType and surface from types and config",
+      "description": "In src/types.ts: delete SurfaceType type entirely. Remove 'surface: SurfaceType' field from MazeConfig. In src/maze/topology.ts: delete cylinderTopology, torusTopology, mobiusTopology, kleinTopology functions. Delete createTopology factory. Rename rectangleTopology to createRectangleTopology and export it directly. In App.tsx: remove 'surface' from DEFAULT_CONFIG, update all createTopology(config.surface, ...) calls to createRectangleTopology(rows, cols). In src/maze/difficulty.ts: update topology usage.",
+      "item_type": "task",
+      "status": "open",
+      "priority": 1,
+      "created_at": "2026-03-09T13:11:40.216417548Z",
+      "updated_at": "2026-03-09T13:11:40.216417548Z"
+    },
     "lb-19of": {
       "id": "lb-19of",
       "title": "Maze solver with solution display",
@@ -494,6 +504,11 @@
     {
       "from_id": "lb-rkmb",
       "to_id": "lb-ibvq",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-11v3",
+      "to_id": "lb-rkmb",
       "dep_type": "parent"
     }
   ]
