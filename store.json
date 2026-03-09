@@ -354,11 +354,10 @@
       "title": "Rewrite weave generation for genuine crossing density",
       "description": "Rewrite weave logic in src/maze/algorithms.ts so crossingDensity is meaningful. For Kruskal: before the main pass, identify candidate crossing cells (interior cells with all 4 neighbors). For each, with probability=crossingDensity, pre-commit it as a crossing by carving one direction pair and registering it in crossings map. Run normal Kruskal to complete connectivity on remaining edges. For DFS: attempt tunneling opportunistically during traversal (not only at dead ends) — if a straight-through visited cell is adjacent and rng() < crossingDensity, take the tunnel before checking regular neighbors. For Prim: add tunnel frontier entries with probability crossingDensity. All three algorithms must produce genuinely woven mazes at density 0.5 on 12x16 grid. Update both instant-generate and step-by-step animation variants.",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 1,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:12:19.042752058Z",
-      "updated_at": "2026-03-09T13:28:35.281722830Z"
+      "updated_at": "2026-03-09T13:30:05.474944669Z"
     },
     "lb-nkk2": {
       "id": "lb-nkk2",
