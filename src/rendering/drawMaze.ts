@@ -3,8 +3,6 @@ import { type Topology, ALL_DIRECTIONS, rectangleTopology } from "../maze/topolo
 import { wallKey } from "../maze/walls";
 import { COLORS } from "../theme/colors";
 
-const WALL_WIDTH = 2;
-
 interface DrawOptions {
   cellSize: number;
   offsetX: number;
@@ -38,7 +36,6 @@ function drawPig(
 ) {
   const s = size * 0.35;
   ctx.save();
-  // Body
   ctx.fillStyle = COLORS.pigPink;
   ctx.beginPath();
   ctx.ellipse(cx, cy, s, s * 0.75, 0, 0, Math.PI * 2);
@@ -46,7 +43,6 @@ function drawPig(
   ctx.strokeStyle = COLORS.pigDark;
   ctx.lineWidth = 1;
   ctx.stroke();
-  // Ears
   ctx.beginPath();
   ctx.ellipse(cx - s * 0.6, cy - s * 0.5, s * 0.25, s * 0.3, -0.3, 0, Math.PI * 2);
   ctx.fill();
@@ -55,7 +51,6 @@ function drawPig(
   ctx.ellipse(cx + s * 0.6, cy - s * 0.5, s * 0.25, s * 0.3, 0.3, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
-  // Eyes
   ctx.fillStyle = COLORS.text;
   ctx.beginPath();
   ctx.arc(cx - s * 0.25, cy - s * 0.1, s * 0.08, 0, Math.PI * 2);
@@ -63,7 +58,6 @@ function drawPig(
   ctx.beginPath();
   ctx.arc(cx + s * 0.25, cy - s * 0.1, s * 0.08, 0, Math.PI * 2);
   ctx.fill();
-  // Nose
   ctx.fillStyle = COLORS.pigDark;
   ctx.beginPath();
   ctx.ellipse(cx, cy + s * 0.15, s * 0.15, s * 0.1, 0, 0, Math.PI * 2);
@@ -80,7 +74,6 @@ function drawCarrot(
 ) {
   const s = size * 0.3;
   ctx.save();
-  // Carrot body
   ctx.fillStyle = COLORS.endColor;
   ctx.beginPath();
   ctx.moveTo(cx, cy + s);
@@ -88,7 +81,6 @@ function drawCarrot(
   ctx.lineTo(cx + s * 0.4, cy - s * 0.3);
   ctx.closePath();
   ctx.fill();
-  // Leaves
   ctx.fillStyle = "#66BB6A";
   ctx.beginPath();
   ctx.ellipse(cx - s * 0.15, cy - s * 0.5, s * 0.1, s * 0.25, -0.3, 0, Math.PI * 2);
@@ -99,109 +91,161 @@ function drawCarrot(
   ctx.restore();
 }
 
+/** Bezier control point offset for quarter-circle approximation */
+const KAPPA = 0.5523;
+
 /**
- * Draw crossing cells with a bridge/tunnel visual effect.
- * The "over" passage is drawn on top with a bridge appearance.
+ * Check if a wall is present in a direction for a cell.
+ * Returns true if boundary or wall exists.
  */
-function drawCrossings(
+function hasWall(
+  cell: CellCoord,
+  dir: Direction,
+  topology: Topology,
+  walls: Set<string>,
+): boolean {
+  const neighbor = topology.neighbor(cell, dir);
+  if (!neighbor) return true; // boundary
+  return walls.has(wallKey(cell, neighbor));
+}
+
+/**
+ * Draw a rounded corner where two perpendicular walls meet.
+ * Carves a quarter-circle from the wall corner, rounding the corridor.
+ */
+function drawRoundedCorner(
   ctx: CanvasRenderingContext2D,
-  _topology: Topology,
-  crossings: Map<string, CrossingOver>,
-  opts: DrawOptions,
+  cornerX: number,
+  cornerY: number,
+  wh: number,
+  corner: "NW" | "NE" | "SW" | "SE",
 ) {
-  const { cellSize, offsetX, offsetY } = opts;
-  const gap = cellSize * 0.3; // gap size for the under-passage
+  const k = wh * KAPPA;
+  ctx.beginPath();
 
-  for (const [ck, over] of crossings) {
-    const [rowStr, colStr] = ck.split(",");
-    const row = Number(rowStr);
-    const col = Number(colStr);
-    const x = offsetX + col * cellSize;
-    const y = offsetY + row * cellSize;
-    const cx = x + cellSize / 2;
-    const cy = y + cellSize / 2;
-
-    // The "under" passage has wall stubs on each side that stop at the bridge
-    // The "over" passage has a bridge drawn over the center
-
-    ctx.strokeStyle = COLORS.wallColor;
-    ctx.lineWidth = WALL_WIDTH;
-    ctx.lineCap = "round";
-
-    if (over === "h") {
-      // Horizontal (E-W) is over, vertical (N-S) goes under
-      // Draw N-S under-passage: wall stubs on east and west that leave a gap in the center
-      // East side wall stubs (north part and south part)
-      ctx.beginPath();
-      ctx.moveTo(x + cellSize, y);
-      ctx.lineTo(x + cellSize, cy - gap);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x + cellSize, cy + gap);
-      ctx.lineTo(x + cellSize, y + cellSize);
-      ctx.stroke();
-      // West side wall stubs
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x, cy - gap);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x, cy + gap);
-      ctx.lineTo(x, y + cellSize);
-      ctx.stroke();
-
-      // Draw the bridge for E-W passage: two horizontal lines across the gap
-      // Fill bridge background to cover the under-passage
-      ctx.fillStyle = COLORS.cellBg;
-      ctx.fillRect(x, cy - gap, cellSize, gap * 2);
-      // Bridge walls (north and south edges of the E-W corridor)
-      ctx.strokeStyle = COLORS.wallColor;
-      ctx.lineWidth = WALL_WIDTH;
-      ctx.beginPath();
-      ctx.moveTo(x, cy - gap);
-      ctx.lineTo(x + cellSize, cy - gap);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x, cy + gap);
-      ctx.lineTo(x + cellSize, cy + gap);
-      ctx.stroke();
-    } else {
-      // Vertical (N-S) is over, horizontal (E-W) goes under
-      // Draw E-W under-passage: wall stubs on north and south that leave a gap
-      // North side wall stubs
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(cx - gap, y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx + gap, y);
-      ctx.lineTo(x + cellSize, y);
-      ctx.stroke();
-      // South side wall stubs
-      ctx.beginPath();
-      ctx.moveTo(x, y + cellSize);
-      ctx.lineTo(cx - gap, y + cellSize);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx + gap, y + cellSize);
-      ctx.lineTo(x + cellSize, y + cellSize);
-      ctx.stroke();
-
-      // Draw the bridge for N-S passage
-      ctx.fillStyle = COLORS.cellBg;
-      ctx.fillRect(cx - gap, y, gap * 2, cellSize);
-      // Bridge walls (east and west edges of the N-S corridor)
-      ctx.strokeStyle = COLORS.wallColor;
-      ctx.lineWidth = WALL_WIDTH;
-      ctx.beginPath();
-      ctx.moveTo(cx - gap, y);
-      ctx.lineTo(cx - gap, y + cellSize);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx + gap, y);
-      ctx.lineTo(cx + gap, y + cellSize);
-      ctx.stroke();
+  switch (corner) {
+    case "NW": {
+      // Grid corner at (cornerX, cornerY), corridor corner at (cornerX+wh, cornerY+wh)
+      const cx = cornerX + wh, cy = cornerY + wh;
+      ctx.moveTo(cornerX, cornerY);
+      ctx.lineTo(cornerX, cy);
+      ctx.bezierCurveTo(cornerX, cy - k, cx - k, cornerY, cx, cornerY);
+      ctx.closePath();
+      break;
     }
+    case "NE": {
+      const cx = cornerX - wh, cy = cornerY + wh;
+      ctx.moveTo(cornerX, cornerY);
+      ctx.lineTo(cx, cornerY);
+      ctx.bezierCurveTo(cx + k, cornerY, cornerX, cy - k, cornerX, cy);
+      ctx.closePath();
+      break;
+    }
+    case "SW": {
+      const cx = cornerX + wh, cy = cornerY - wh;
+      ctx.moveTo(cornerX, cornerY);
+      ctx.lineTo(cx, cornerY);
+      ctx.bezierCurveTo(cx - k, cornerY, cornerX, cy + k, cornerX, cy);
+      ctx.closePath();
+      break;
+    }
+    case "SE": {
+      const cx = cornerX - wh, cy = cornerY - wh;
+      ctx.moveTo(cornerX, cornerY);
+      ctx.lineTo(cornerX, cy);
+      ctx.bezierCurveTo(cornerX, cy + k, cx + k, cornerY, cx, cornerY);
+      ctx.closePath();
+      break;
+    }
+  }
+  ctx.fill();
+}
+
+/**
+ * Carve the corridor for a single cell (fill with given color).
+ * Fills inner rect, passage extensions, and rounded corners.
+ */
+function carveCellCorridor(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  cellSize: number,
+  wh: number,
+  wN: boolean,
+  wS: boolean,
+  wE: boolean,
+  wW: boolean,
+) {
+  // Inner corridor rect (always present)
+  ctx.fillRect(x + wh, y + wh, cellSize - 2 * wh, cellSize - 2 * wh);
+
+  // Passage extensions for open walls
+  if (!wN) ctx.fillRect(x + wh, y, cellSize - 2 * wh, wh);
+  if (!wS) ctx.fillRect(x + wh, y + cellSize - wh, cellSize - 2 * wh, wh);
+  if (!wW) ctx.fillRect(x, y + wh, wh, cellSize - 2 * wh);
+  if (!wE) ctx.fillRect(x + cellSize - wh, y + wh, wh, cellSize - 2 * wh);
+
+  // Corner fills where NEITHER wall is present (open corner = fill the corner too)
+  if (!wN && !wW) ctx.fillRect(x, y, wh, wh);
+  if (!wN && !wE) ctx.fillRect(x + cellSize - wh, y, wh, wh);
+  if (!wS && !wW) ctx.fillRect(x, y + cellSize - wh, wh, wh);
+  if (!wS && !wE) ctx.fillRect(x + cellSize - wh, y + cellSize - wh, wh, wh);
+
+  // Rounded bezier corners where two perpendicular walls meet
+  if (wN && wW) drawRoundedCorner(ctx, x, y, wh, "NW");
+  if (wN && wE) drawRoundedCorner(ctx, x + cellSize, y, wh, "NE");
+  if (wS && wW) drawRoundedCorner(ctx, x, y + cellSize, wh, "SW");
+  if (wS && wE) drawRoundedCorner(ctx, x + cellSize, y + cellSize, wh, "SE");
+}
+
+/**
+ * Draw a crossing cell with bridge/tunnel effect using thick-wall style.
+ */
+function drawCrossingCell(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  cellSize: number,
+  wh: number,
+  over: CrossingOver,
+) {
+  const corridorWidth = cellSize - 2 * wh;
+
+  if (over === "h") {
+    // E-W is the overpass, N-S is the underpass
+
+    // 1. Draw the underpass (N-S corridor through the cell)
+    ctx.fillStyle = COLORS.cellBg;
+    // Full N-S corridor extending to cell edges (no walls N or S in a crossing)
+    ctx.fillRect(x + wh, y, corridorWidth, cellSize);
+
+    // 2. Draw bridge walls across the underpass
+    ctx.fillStyle = COLORS.wallColor;
+    const bridgeTop = y + wh;
+    const bridgeBottom = y + cellSize - wh;
+    // Top bridge wall
+    ctx.fillRect(x + wh, bridgeTop, corridorWidth, wh);
+    // Bottom bridge wall
+    ctx.fillRect(x + wh, bridgeBottom - wh, corridorWidth, wh);
+
+    // 3. Draw the overpass (E-W corridor on top, covering bridge area)
+    ctx.fillStyle = COLORS.cellBg;
+    ctx.fillRect(x, y + wh, cellSize, corridorWidth);
+  } else {
+    // N-S is the overpass, E-W is the underpass
+
+    // 1. Draw the underpass (E-W corridor)
+    ctx.fillStyle = COLORS.cellBg;
+    ctx.fillRect(x, y + wh, cellSize, corridorWidth);
+
+    // 2. Draw bridge walls
+    ctx.fillStyle = COLORS.wallColor;
+    ctx.fillRect(x + wh, y + wh, wh, corridorWidth);
+    ctx.fillRect(x + cellSize - 2 * wh, y + wh, wh, corridorWidth);
+
+    // 3. Draw the overpass (N-S corridor on top)
+    ctx.fillStyle = COLORS.cellBg;
+    ctx.fillRect(x + wh, y, corridorWidth, cellSize);
   }
 }
 
@@ -223,37 +267,50 @@ export function drawMaze(
   opts.editMode = editMode;
   opts.hoveredWall = hoveredWall;
 
-  // Clear
+  const wh = Math.max(cellSize * 0.15, 2); // wall half-thickness
+  const crossings = maze.crossings;
+  const crossingKey = (c: CellCoord) => `${c.row},${c.col}`;
+
+  // 1. Clear canvas
   ctx.fillStyle = COLORS.bgPrimary;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Draw cells
-  ctx.fillStyle = COLORS.cellBg;
-  ctx.fillRect(
-    offsetX,
-    offsetY,
-    cellSize * config.cols,
-    cellSize * config.rows,
-  );
+  // 2. Fill maze area with wall color
+  ctx.fillStyle = COLORS.wallColor;
+  ctx.fillRect(offsetX, offsetY, cellSize * config.cols, cellSize * config.rows);
 
-  // Draw explored cells (solver animation)
-  if (exploredCells && exploredCells.size > 0) {
-    ctx.fillStyle = COLORS.explored;
-    for (let row = 0; row < config.rows; row++) {
-      for (let col = 0; col < config.cols; col++) {
-        if (exploredCells.has(`${row},${col}`)) {
-          ctx.fillRect(
-            offsetX + col * cellSize,
-            offsetY + row * cellSize,
-            cellSize,
-            cellSize,
-          );
-        }
-      }
+  // 3. Carve corridors for each non-crossing cell
+  for (let row = 0; row < config.rows; row++) {
+    for (let col = 0; col < config.cols; col++) {
+      const cell: CellCoord = { row, col };
+      if (crossings.has(crossingKey(cell))) continue;
+
+      const x = offsetX + col * cellSize;
+      const y = offsetY + row * cellSize;
+      const wN = hasWall(cell, "north", topology, walls);
+      const wS = hasWall(cell, "south", topology, walls);
+      const wE = hasWall(cell, "east", topology, walls);
+      const wW = hasWall(cell, "west", topology, walls);
+
+      // Check if this cell is explored (solver animation)
+      const isExplored = exploredCells?.has(`${row},${col}`);
+      ctx.fillStyle = isExplored ? COLORS.explored : COLORS.cellBg;
+
+      carveCellCorridor(ctx, x, y, cellSize, wh, wN, wS, wE, wW);
     }
   }
 
-  // Draw start and end
+  // 4. Draw crossing cells
+  for (const [ck, over] of crossings) {
+    const [rowStr, colStr] = ck.split(",");
+    const row = Number(rowStr);
+    const col = Number(colStr);
+    const x = offsetX + col * cellSize;
+    const y = offsetY + row * cellSize;
+    drawCrossingCell(ctx, x, y, cellSize, wh, over);
+  }
+
+  // 5. Draw start and end markers
   const startCx = offsetX + start.col * cellSize + cellSize / 2;
   const startCy = offsetY + start.row * cellSize + cellSize / 2;
   drawPig(ctx, startCx, startCy, cellSize);
@@ -262,85 +319,10 @@ export function drawMaze(
   const endCy = offsetY + end.row * cellSize + cellSize / 2;
   drawCarrot(ctx, endCx, endCy, cellSize);
 
-  // Draw walls (skip crossing cells — drawn separately)
-  const crossings = maze.crossings;
-  const crossingKey = (c: CellCoord) => `${c.row},${c.col}`;
-  ctx.lineCap = "round";
-  for (let row = 0; row < config.rows; row++) {
-    for (let col = 0; col < config.cols; col++) {
-      const cell: CellCoord = { row, col };
-      const x = offsetX + col * cellSize;
-      const y = offsetY + row * cellSize;
-
-      if (crossings.has(crossingKey(cell))) continue; // drawn later
-
-      for (const dir of ALL_DIRECTIONS) {
-        const neighbor = topology.neighbor(cell, dir);
-        if (!neighbor) {
-          // Boundary wall — always draw
-          ctx.strokeStyle = COLORS.wallColor;
-          ctx.lineWidth = WALL_WIDTH + 1;
-          ctx.beginPath();
-          switch (dir) {
-            case "north":
-              ctx.moveTo(x, y);
-              ctx.lineTo(x + cellSize, y);
-              break;
-            case "south":
-              ctx.moveTo(x, y + cellSize);
-              ctx.lineTo(x + cellSize, y + cellSize);
-              break;
-            case "west":
-              ctx.moveTo(x, y);
-              ctx.lineTo(x, y + cellSize);
-              break;
-            case "east":
-              ctx.moveTo(x + cellSize, y);
-              ctx.lineTo(x + cellSize, y + cellSize);
-              break;
-          }
-          ctx.stroke();
-          continue;
-        }
-
-        const wk = wallKey(cell, neighbor);
-        if (!walls.has(wk)) continue;
-
-        // Draw internal wall
-        const isHovered = hoveredWall === wk;
-        ctx.strokeStyle = isHovered ? COLORS.wallHover : COLORS.wallColor;
-        ctx.lineWidth = isHovered ? WALL_WIDTH + 2 : WALL_WIDTH;
-        ctx.beginPath();
-        switch (dir) {
-          case "north":
-            ctx.moveTo(x, y);
-            ctx.lineTo(x + cellSize, y);
-            break;
-          case "south":
-            ctx.moveTo(x, y + cellSize);
-            ctx.lineTo(x + cellSize, y + cellSize);
-            break;
-          case "west":
-            ctx.moveTo(x, y);
-            ctx.lineTo(x, y + cellSize);
-            break;
-          case "east":
-            ctx.moveTo(x + cellSize, y);
-            ctx.lineTo(x + cellSize, y + cellSize);
-            break;
-        }
-        ctx.stroke();
-      }
-    }
-  }
-
-  // Draw crossing cells with bridge effect
-  drawCrossings(ctx, topology, crossings, opts);
-
-  // Draw solution path
+  // 6. Draw solution path
   if (solutionPath && solutionPath.length > 1) {
     ctx.strokeStyle = COLORS.accent;
-    ctx.lineWidth = Math.max(cellSize * 0.15, 2);
+    ctx.lineWidth = Math.max(cellSize * 0.12, 2);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.globalAlpha = 0.6;
@@ -352,24 +334,64 @@ export function drawMaze(
       if (i === 0) {
         ctx.moveTo(cx, cy);
       } else {
-        // Check if this is a wrap (big jump in grid position)
-        const prev = solutionPath[i - 1];
-        const dr = Math.abs(cell.row - prev.row);
-        const dc = Math.abs(cell.col - prev.col);
-        if (dr > 1 || dc > 1) {
-          // Wrap — draw a new sub-path segment
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(cx, cy);
-        } else {
-          ctx.lineTo(cx, cy);
-        }
+        ctx.lineTo(cx, cy);
       }
     }
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
 
+  // 7. Draw hovered wall highlight (edit mode)
+  if (editMode && hoveredWall) {
+    drawWallHighlight(ctx, hoveredWall, topology, walls, opts, wh);
+  }
+}
+
+/** Draw a highlighted wall segment for edit mode hover */
+function drawWallHighlight(
+  ctx: CanvasRenderingContext2D,
+  wk: string,
+  topology: Topology,
+  walls: Set<string>,
+  opts: DrawOptions,
+  wh: number,
+) {
+  const { cellSize, offsetX, offsetY } = opts;
+  // Find the wall's position by checking all cells
+  for (let row = 0; row < topology.rows; row++) {
+    for (let col = 0; col < topology.cols; col++) {
+      const cell: CellCoord = { row, col };
+      for (const dir of ALL_DIRECTIONS) {
+        const neighbor = topology.neighbor(cell, dir);
+        if (!neighbor) continue;
+        if (wallKey(cell, neighbor) !== wk) continue;
+
+        const x = offsetX + col * cellSize;
+        const y = offsetY + row * cellSize;
+        const isPresent = walls.has(wk);
+
+        ctx.fillStyle = isPresent ? COLORS.wallHover : `${COLORS.wallHover}60`;
+        ctx.globalAlpha = 0.5;
+
+        switch (dir) {
+          case "north":
+            ctx.fillRect(x + wh, y - wh / 2, cellSize - 2 * wh, wh);
+            break;
+          case "south":
+            ctx.fillRect(x + wh, y + cellSize - wh / 2, cellSize - 2 * wh, wh);
+            break;
+          case "west":
+            ctx.fillRect(x - wh / 2, y + wh, wh, cellSize - 2 * wh);
+            break;
+          case "east":
+            ctx.fillRect(x + cellSize - wh / 2, y + wh, wh, cellSize - 2 * wh);
+            break;
+        }
+        ctx.globalAlpha = 1;
+        return;
+      }
+    }
+  }
 }
 
 /** Hit test: given a click position, find which cell was clicked */
@@ -424,6 +446,59 @@ export function exportMazePNG(
   link.click();
 }
 
+/** Build SVG corridor path data for a cell with rounded corners */
+function svgCellCorridorPath(
+  x: number,
+  y: number,
+  cellSize: number,
+  wh: number,
+  wN: boolean,
+  wS: boolean,
+  wE: boolean,
+  wW: boolean,
+): string {
+  const k = wh * KAPPA;
+  const parts: string[] = [];
+
+  // Inner corridor rect
+  parts.push(`<rect x="${x + wh}" y="${y + wh}" width="${cellSize - 2 * wh}" height="${cellSize - 2 * wh}"/>`);
+
+  // Passage extensions
+  if (!wN) parts.push(`<rect x="${x + wh}" y="${y}" width="${cellSize - 2 * wh}" height="${wh}"/>`);
+  if (!wS) parts.push(`<rect x="${x + wh}" y="${y + cellSize - wh}" width="${cellSize - 2 * wh}" height="${wh}"/>`);
+  if (!wW) parts.push(`<rect x="${x}" y="${y + wh}" width="${wh}" height="${cellSize - 2 * wh}"/>`);
+  if (!wE) parts.push(`<rect x="${x + cellSize - wh}" y="${y + wh}" width="${wh}" height="${cellSize - 2 * wh}"/>`);
+
+  // Open corners (no walls on either side)
+  if (!wN && !wW) parts.push(`<rect x="${x}" y="${y}" width="${wh}" height="${wh}"/>`);
+  if (!wN && !wE) parts.push(`<rect x="${x + cellSize - wh}" y="${y}" width="${wh}" height="${wh}"/>`);
+  if (!wS && !wW) parts.push(`<rect x="${x}" y="${y + cellSize - wh}" width="${wh}" height="${wh}"/>`);
+  if (!wS && !wE) parts.push(`<rect x="${x + cellSize - wh}" y="${y + cellSize - wh}" width="${wh}" height="${wh}"/>`);
+
+  // Rounded corners where two walls meet
+  if (wN && wW) {
+    const cx = x + wh, cy = y + wh;
+    parts.push(`<path d="M${x},${y} L${x},${cy} C${x},${cy - k} ${cx - k},${y} ${cx},${y} Z"/>`);
+  }
+  if (wN && wE) {
+    const cx = x + cellSize - wh, cy = y + wh;
+    const gx = x + cellSize;
+    parts.push(`<path d="M${gx},${y} L${cx},${y} C${cx + k},${y} ${gx},${cy - k} ${gx},${cy} Z"/>`);
+  }
+  if (wS && wW) {
+    const cx = x + wh, cy = y + cellSize - wh;
+    const gy = y + cellSize;
+    parts.push(`<path d="M${x},${gy} L${cx},${gy} C${cx - k},${gy} ${x},${cy + k} ${x},${cy} Z"/>`);
+  }
+  if (wS && wE) {
+    const cx = x + cellSize - wh, cy = y + cellSize - wh;
+    const gx = x + cellSize, gy = y + cellSize;
+    parts.push(`<path d="M${gx},${gy} L${gx},${cy} C${gx},${cy + k} ${cx + k},${gy} ${cx},${gy} Z"/>`);
+  }
+
+  return parts.join("\n");
+}
+
 /** Export maze as SVG and trigger download */
 export function exportMazeSVG(
   maze: MazeState,
@@ -439,6 +514,7 @@ export function exportMazeSVG(
   const height = cellSize * config.rows + padding * 2;
   const offsetX = padding;
   const offsetY = padding;
+  const wh = Math.max(cellSize * 0.15, 2);
   const crossings = maze.crossings;
   const crossingCellKey = (c: CellCoord) => `${c.row},${c.col}`;
 
@@ -450,10 +526,52 @@ export function exportMazeSVG(
   // Background
   parts.push(`<rect width="${width}" height="${height}" fill="${COLORS.bgPrimary}"/>`);
 
-  // Cell background
+  // Maze area filled with wall color
   parts.push(
-    `<rect x="${offsetX}" y="${offsetY}" width="${cellSize * config.cols}" height="${cellSize * config.rows}" fill="${COLORS.cellBg}"/>`,
+    `<rect x="${offsetX}" y="${offsetY}" width="${cellSize * config.cols}" height="${cellSize * config.rows}" fill="${COLORS.wallColor}"/>`,
   );
+
+  // Carve corridors
+  parts.push(`<g fill="${COLORS.cellBg}">`);
+  for (let row = 0; row < config.rows; row++) {
+    for (let col = 0; col < config.cols; col++) {
+      const cell: CellCoord = { row, col };
+      if (crossings.has(crossingCellKey(cell))) continue;
+
+      const x = offsetX + col * cellSize;
+      const y = offsetY + row * cellSize;
+      const wN = hasWall(cell, "north", topology, walls);
+      const wS = hasWall(cell, "south", topology, walls);
+      const wE = hasWall(cell, "east", topology, walls);
+      const wW = hasWall(cell, "west", topology, walls);
+
+      parts.push(svgCellCorridorPath(x, y, cellSize, wh, wN, wS, wE, wW));
+    }
+  }
+  parts.push("</g>");
+
+  // Crossings
+  const corridorWidth = cellSize - 2 * wh;
+  for (const [ck, over] of crossings) {
+    const [rowStr, colStr] = ck.split(",");
+    const row = Number(rowStr);
+    const col = Number(colStr);
+    const x = offsetX + col * cellSize;
+    const y = offsetY + row * cellSize;
+
+    if (over === "h") {
+      // E-W overpass, N-S underpass
+      parts.push(`<rect x="${x + wh}" y="${y}" width="${corridorWidth}" height="${cellSize}" fill="${COLORS.cellBg}"/>`);
+      parts.push(`<rect x="${x + wh}" y="${y + wh}" width="${corridorWidth}" height="${wh}" fill="${COLORS.wallColor}"/>`);
+      parts.push(`<rect x="${x + wh}" y="${y + cellSize - 2 * wh}" width="${corridorWidth}" height="${wh}" fill="${COLORS.wallColor}"/>`);
+      parts.push(`<rect x="${x}" y="${y + wh}" width="${cellSize}" height="${corridorWidth}" fill="${COLORS.cellBg}"/>`);
+    } else {
+      parts.push(`<rect x="${x}" y="${y + wh}" width="${cellSize}" height="${corridorWidth}" fill="${COLORS.cellBg}"/>`);
+      parts.push(`<rect x="${x + wh}" y="${y + wh}" width="${wh}" height="${corridorWidth}" fill="${COLORS.wallColor}"/>`);
+      parts.push(`<rect x="${x + cellSize - 2 * wh}" y="${y + wh}" width="${wh}" height="${corridorWidth}" fill="${COLORS.wallColor}"/>`);
+      parts.push(`<rect x="${x + wh}" y="${y}" width="${corridorWidth}" height="${cellSize}" fill="${COLORS.cellBg}"/>`);
+    }
+  }
 
   // Start pig
   const startCx = offsetX + start.col * cellSize + cellSize / 2;
@@ -465,73 +583,17 @@ export function exportMazeSVG(
   const endCy = offsetY + end.row * cellSize + cellSize / 2;
   parts.push(svgCarrot(endCx, endCy, cellSize));
 
-  // Walls (skip crossing cells)
-  for (let row = 0; row < config.rows; row++) {
-    for (let col = 0; col < config.cols; col++) {
-      const cell: CellCoord = { row, col };
-      const x = offsetX + col * cellSize;
-      const y = offsetY + row * cellSize;
-
-      if (crossings.has(crossingCellKey(cell))) continue;
-
-      for (const dir of ALL_DIRECTIONS) {
-        const neighbor = topology.neighbor(cell, dir);
-        if (!neighbor) {
-          // Boundary wall
-          const [x1, y1, x2, y2] = wallLineCoords(x, y, cellSize, dir);
-          parts.push(
-            `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH + 1}" stroke-linecap="round"/>`,
-          );
-          continue;
-        }
-
-        const wk = wallKey(cell, neighbor);
-        if (!walls.has(wk)) continue;
-
-        const [x1, y1, x2, y2] = wallLineCoords(x, y, cellSize, dir);
-        parts.push(
-          `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`,
-        );
-      }
-    }
-  }
-
-  // Crossings
-  parts.push(svgCrossings(topology, crossings, cellSize, offsetX, offsetY));
-
   // Solution path
   if (solutionPath && solutionPath.length > 1) {
-    const pathWidth = Math.max(cellSize * 0.15, 2);
-    // Build segments (break at wraps)
-    let segment: string[] = [];
-    for (let i = 0; i < solutionPath.length; i++) {
-      const cell = solutionPath[i];
+    const pathWidth = Math.max(cellSize * 0.12, 2);
+    const d = solutionPath.map((cell, i) => {
       const cx = offsetX + cell.col * cellSize + cellSize / 2;
       const cy = offsetY + cell.row * cellSize + cellSize / 2;
-      if (i === 0) {
-        segment.push(`M${cx},${cy}`);
-      } else {
-        const prev = solutionPath[i - 1];
-        const dr = Math.abs(cell.row - prev.row);
-        const dc = Math.abs(cell.col - prev.col);
-        if (dr > 1 || dc > 1) {
-          // Wrap — flush segment and start new one
-          if (segment.length > 0) {
-            parts.push(
-              `<path d="${segment.join(" ")}" fill="none" stroke="${COLORS.accent}" stroke-width="${pathWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>`,
-            );
-          }
-          segment = [`M${cx},${cy}`];
-        } else {
-          segment.push(`L${cx},${cy}`);
-        }
-      }
-    }
-    if (segment.length > 0) {
-      parts.push(
-        `<path d="${segment.join(" ")}" fill="none" stroke="${COLORS.accent}" stroke-width="${pathWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>`,
-      );
-    }
+      return i === 0 ? `M${cx},${cy}` : `L${cx},${cy}`;
+    }).join(" ");
+    parts.push(
+      `<path d="${d}" fill="none" stroke="${COLORS.accent}" stroke-width="${pathWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>`,
+    );
   }
 
   parts.push("</svg>");
@@ -546,46 +608,24 @@ export function exportMazeSVG(
   URL.revokeObjectURL(url);
 }
 
-function wallLineCoords(
-  x: number,
-  y: number,
-  cellSize: number,
-  dir: Direction,
-): [number, number, number, number] {
-  switch (dir) {
-    case "north":
-      return [x, y, x + cellSize, y];
-    case "south":
-      return [x, y + cellSize, x + cellSize, y + cellSize];
-    case "west":
-      return [x, y, x, y + cellSize];
-    case "east":
-      return [x + cellSize, y, x + cellSize, y + cellSize];
-  }
-}
-
 function svgPig(cx: number, cy: number, size: number): string {
   const s = size * 0.35;
   const parts: string[] = [];
-  // Body
   parts.push(
     `<ellipse cx="${cx}" cy="${cy}" rx="${s}" ry="${s * 0.75}" fill="${COLORS.pigPink}" stroke="${COLORS.pigDark}" stroke-width="1"/>`,
   );
-  // Ears
   parts.push(
     `<ellipse cx="${cx - s * 0.6}" cy="${cy - s * 0.5}" rx="${s * 0.25}" ry="${s * 0.3}" transform="rotate(${(-0.3 * 180) / Math.PI} ${cx - s * 0.6} ${cy - s * 0.5})" fill="${COLORS.pigPink}" stroke="${COLORS.pigDark}" stroke-width="1"/>`,
   );
   parts.push(
     `<ellipse cx="${cx + s * 0.6}" cy="${cy - s * 0.5}" rx="${s * 0.25}" ry="${s * 0.3}" transform="rotate(${(0.3 * 180) / Math.PI} ${cx + s * 0.6} ${cy - s * 0.5})" fill="${COLORS.pigPink}" stroke="${COLORS.pigDark}" stroke-width="1"/>`,
   );
-  // Eyes
   parts.push(
     `<circle cx="${cx - s * 0.25}" cy="${cy - s * 0.1}" r="${s * 0.08}" fill="${COLORS.text}"/>`,
   );
   parts.push(
     `<circle cx="${cx + s * 0.25}" cy="${cy - s * 0.1}" r="${s * 0.08}" fill="${COLORS.text}"/>`,
   );
-  // Nose
   parts.push(
     `<ellipse cx="${cx}" cy="${cy + s * 0.15}" rx="${s * 0.15}" ry="${s * 0.1}" fill="${COLORS.pigDark}"/>`,
   );
@@ -595,65 +635,15 @@ function svgPig(cx: number, cy: number, size: number): string {
 function svgCarrot(cx: number, cy: number, size: number): string {
   const s = size * 0.3;
   const parts: string[] = [];
-  // Carrot body
   parts.push(
     `<polygon points="${cx},${cy + s} ${cx - s * 0.4},${cy - s * 0.3} ${cx + s * 0.4},${cy - s * 0.3}" fill="${COLORS.endColor}"/>`,
   );
-  // Leaves
   parts.push(
     `<ellipse cx="${cx - s * 0.15}" cy="${cy - s * 0.5}" rx="${s * 0.1}" ry="${s * 0.25}" transform="rotate(${(-0.3 * 180) / Math.PI} ${cx - s * 0.15} ${cy - s * 0.5})" fill="#66BB6A"/>`,
   );
   parts.push(
     `<ellipse cx="${cx + s * 0.15}" cy="${cy - s * 0.5}" rx="${s * 0.1}" ry="${s * 0.25}" transform="rotate(${(0.3 * 180) / Math.PI} ${cx + s * 0.15} ${cy - s * 0.5})" fill="#66BB6A"/>`,
   );
-  return parts.join("\n");
-}
-
-function svgCrossings(
-  _topology: Topology,
-  crossings: Map<string, CrossingOver>,
-  cellSize: number,
-  offsetX: number,
-  offsetY: number,
-): string {
-  const parts: string[] = [];
-  const gap = cellSize * 0.3;
-
-  for (const [ck, over] of crossings) {
-    const [rowStr, colStr] = ck.split(",");
-    const row = Number(rowStr);
-    const col = Number(colStr);
-    const x = offsetX + col * cellSize;
-    const y = offsetY + row * cellSize;
-    const cx = x + cellSize / 2;
-    const cy = y + cellSize / 2;
-
-    if (over === "h") {
-      // Horizontal over, vertical under
-      // E/W wall stubs
-      parts.push(`<line x1="${x + cellSize}" y1="${y}" x2="${x + cellSize}" y2="${cy - gap}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      parts.push(`<line x1="${x + cellSize}" y1="${cy + gap}" x2="${x + cellSize}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      parts.push(`<line x1="${x}" y1="${y}" x2="${x}" y2="${cy - gap}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      parts.push(`<line x1="${x}" y1="${cy + gap}" x2="${x}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      // Bridge background
-      parts.push(`<rect x="${x}" y="${cy - gap}" width="${cellSize}" height="${gap * 2}" fill="${COLORS.cellBg}"/>`);
-      // Bridge walls
-      parts.push(`<line x1="${x}" y1="${cy - gap}" x2="${x + cellSize}" y2="${cy - gap}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      parts.push(`<line x1="${x}" y1="${cy + gap}" x2="${x + cellSize}" y2="${cy + gap}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-    } else {
-      // Vertical over, horizontal under
-      // N/S wall stubs
-      parts.push(`<line x1="${x}" y1="${y}" x2="${cx - gap}" y2="${y}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      parts.push(`<line x1="${cx + gap}" y1="${y}" x2="${x + cellSize}" y2="${y}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      parts.push(`<line x1="${x}" y1="${y + cellSize}" x2="${cx - gap}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      parts.push(`<line x1="${cx + gap}" y1="${y + cellSize}" x2="${x + cellSize}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      // Bridge background
-      parts.push(`<rect x="${cx - gap}" y="${y}" width="${gap * 2}" height="${cellSize}" fill="${COLORS.cellBg}"/>`);
-      // Bridge walls
-      parts.push(`<line x1="${cx - gap}" y1="${y}" x2="${cx - gap}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-      parts.push(`<line x1="${cx + gap}" y1="${y}" x2="${cx + gap}" y2="${y + cellSize}" stroke="${COLORS.wallColor}" stroke-width="${WALL_WIDTH}" stroke-linecap="round"/>`);
-    }
-  }
   return parts.join("\n");
 }
 
@@ -668,7 +658,6 @@ export function hitTestWall(
   const { config } = maze;
   const topology = rectangleTopology(config.rows, config.cols);
 
-  // Recalculate drawing params
   const maxCellW = (canvasWidth - 60) / config.cols;
   const maxCellH = (canvasHeight - 60) / config.rows;
   const cellSize = Math.floor(Math.min(maxCellW, maxCellH, 40));
@@ -677,7 +666,6 @@ export function hitTestWall(
   const offsetX = Math.floor((canvasWidth - mazeW) / 2);
   const offsetY = Math.floor((canvasHeight - mazeH) / 2);
 
-  // Convert to grid coordinates
   const gx = (x - offsetX) / cellSize;
   const gy = (y - offsetY) / cellSize;
 
@@ -696,28 +684,14 @@ export function hitTestWall(
         const neighbor = topology.neighbor(cell, dir);
         if (!neighbor) continue;
 
-        // Wall position (in grid units)
         let wx: number, wy: number;
         switch (dir) {
-          case "north":
-            wx = col + 0.5;
-            wy = row;
-            break;
-          case "south":
-            wx = col + 0.5;
-            wy = row + 1;
-            break;
-          case "west":
-            wx = col;
-            wy = row + 0.5;
-            break;
-          case "east":
-            wx = col + 1;
-            wy = row + 0.5;
-            break;
+          case "north": wx = col + 0.5; wy = row; break;
+          case "south": wx = col + 0.5; wy = row + 1; break;
+          case "west": wx = col; wy = row + 0.5; break;
+          case "east": wx = col + 1; wy = row + 0.5; break;
         }
 
-        // Distance: prefer walls whose midpoint is close
         const dist = Math.sqrt((gx - wx) ** 2 + (gy - wy) ** 2);
         if (dist < bestDist) {
           bestDist = dist;
