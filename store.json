@@ -504,11 +504,10 @@
       "title": "Implement wall-path bezier corridor renderer",
       "description": "Rewrite drawMaze() in src/rendering/drawMaze.ts using the wall-path approach from public/npmaze-reference.svg. Approach: (1) White/light background fill for maze area. (2) For each cell, determine which of its 4 walls are present (blocked passages). (3) Trace each wall segment as a Canvas path using moveTo/lineTo. (4) At cell corners where two perpendicular walls meet at a convex corridor corner, replace the sharp corner with a quarter-circle bezier curve: cubic bezier with control points at radius * 0.5523 offset (where radius = cellSize/2 - wallGap). (5) Stroke entire path in one call with strokeStyle=COLORS.wallColor, lineWidth=wallThickness (about 15-20% of cellSize), lineCap='round'. The wall gap from cell edge determines how wide the corridor opening is. Target: visually match the smooth rounded corridors in the SVG reference.",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 1,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:12:37.182363336Z",
-      "updated_at": "2026-03-09T13:30:28.251397098Z"
+      "updated_at": "2026-03-09T13:34:42.539824691Z"
     },
     "lb-zs96": {
       "id": "lb-zs96",
