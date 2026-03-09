@@ -50,6 +50,16 @@
       "created_at": "2026-03-08T22:26:44.713172743Z",
       "updated_at": "2026-03-08T22:27:12.482501384Z"
     },
+    "lb-2dui": {
+      "id": "lb-2dui",
+      "title": "Render crossing cells with bezier bridge effect",
+      "description": "Extend the bezier renderer to handle crossing cells (from maze.crossings map). For a crossing cell with over='v' (N-S is overpass): (1) Draw the E-W under-passage as two short stub walls (east and west walls of center, with round caps — they become the 'tunnel mouth' visuals). (2) Draw the N-S overpass walls as full continuous corridor walls through the cell, on top of the under-passage stubs. (3) The overpass walls cover the center of the under-passage stubs, creating the bridge visual. Use ctx.save/restore to draw under first, then over. The visual must clearly show which passage goes over which. For over='h' (E-W overpass), mirror the logic.",
+      "item_type": "task",
+      "status": "open",
+      "priority": 1,
+      "created_at": "2026-03-09T13:12:44.988666203Z",
+      "updated_at": "2026-03-09T13:12:44.988666203Z"
+    },
     "lb-2ejg": {
       "id": "lb-2ejg",
       "title": "Canvas rendering + basic UI",
@@ -628,6 +638,11 @@
     },
     {
       "from_id": "lb-xkck",
+      "to_id": "lb-ev4z",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-2dui",
       "to_id": "lb-ev4z",
       "dep_type": "parent"
     }
