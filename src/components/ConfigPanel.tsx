@@ -143,6 +143,28 @@ export function ConfigPanel({
         </span>
       </div>
 
+      {config.weave && (
+        <div className="config-section">
+          <label className="config-label">
+            Crossing Density: {Math.round(config.crossingDensity * 100)}%
+          </label>
+          <input
+            type="range"
+            className="config-slider"
+            min={0}
+            max={1}
+            step={0.05}
+            value={config.crossingDensity}
+            onChange={(e) =>
+              onConfigChange({ ...config, crossingDensity: Number(e.target.value) })
+            }
+          />
+          <span className="config-desc">
+            Low = sparse crossings, High = dense crossings
+          </span>
+        </div>
+      )}
+
       <div className="config-section">
         <label className="config-label" htmlFor="seed-input">Seed</label>
         <div style={{ display: "flex", gap: "4px" }}>

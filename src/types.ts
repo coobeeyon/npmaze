@@ -12,6 +12,7 @@ export interface MazeConfig {
   cols: number;
   algorithm: AlgorithmType;
   weave: boolean;
+  crossingDensity: number;
   seed: number;
 }
 

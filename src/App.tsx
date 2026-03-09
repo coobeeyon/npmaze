@@ -18,7 +18,8 @@ const DEFAULT_CONFIG: MazeConfig = {
   rows: 12,
   cols: 16,
   algorithm: "dfs",
-  weave: false,
+  weave: true,
+  crossingDensity: 0.5,
   seed: randomSeed(),
 };
 
@@ -54,6 +55,12 @@ function parseConfigFromURL(): MazeConfig {
   if (weave === "1") config.weave = true;
   if (weave === "0") config.weave = false;
 
+  const density = params.get("density");
+  if (density) {
+    const val = parseFloat(density);
+    if (val >= 0 && val <= 1) config.crossingDensity = val;
+  }
+
   return config;
 }
 
@@ -64,14 +71,17 @@ function buildShareURL(config: MazeConfig): string {
   params.set("rows", config.rows.toString());
   params.set("cols", config.cols.toString());
   if (config.algorithm !== "dfs") params.set("algo", config.algorithm);
-  if (config.weave) params.set("weave", "1");
+  if (config.weave) {
+    params.set("weave", "1");
+    if (config.crossingDensity !== 0.5) params.set("density", config.crossingDensity.toFixed(2));
+  }
   return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 }
 
 function createMaze(config: MazeConfig): MazeState {
   const topology = rectangleTopology(config.rows, config.cols);
   const rng = mulberry32(config.seed);
-  const result = generateMaze(topology, config.algorithm, config.weave, rng);
+  const result = generateMaze(topology, config.algorithm, config.weave, rng, config.crossingDensity);
   return { config, walls: result.walls, crossings: result.crossings };
 }
 
@@ -156,7 +166,7 @@ export default function App() {
     const topology = rectangleTopology(newConfig.rows, newConfig.cols);
     const allWalls = createAllWalls(topology);
     const rng = mulberry32(newSeed);
-    const gen = generateMazeSteps(topology, newConfig.algorithm, newConfig.weave, rng);
+    const gen = generateMazeSteps(topology, newConfig.algorithm, newConfig.weave, rng, newConfig.crossingDensity);
 
     setMaze({ config: newConfig, walls: allWalls, crossings: new Map() });
     setAnimating(true);
