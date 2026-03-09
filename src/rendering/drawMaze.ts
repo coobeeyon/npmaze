@@ -2,6 +2,7 @@ import type { CellCoord, CrossingOver, Direction, MazeState } from "../types";
 import { type Topology, ALL_DIRECTIONS, rectangleTopology } from "../maze/topology";
 import { wallKey } from "../maze/walls";
 import { COLORS } from "../theme/colors";
+import { getPigImage } from "./pigImage";
 
 interface DrawOptions {
   cellSize: number;
@@ -27,8 +28,63 @@ function getDrawOptions(
   return { cellSize, offsetX, offsetY, editMode: false, hoveredWall: null };
 }
 
-/** Draw a skinny pig icon at a cell */
+/** Draw a skinny pig photo clipped to a circle, or fall back to programmatic icon */
 function drawPig(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  size: number,
+) {
+  const img = getPigImage();
+  if (img) {
+    drawPigPhoto(ctx, cx, cy, size, img);
+  } else {
+    drawPigFallback(ctx, cx, cy, size);
+  }
+}
+
+/** Draw the skinny pig photo clipped to a circle at the start cell */
+function drawPigPhoto(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  size: number,
+  img: HTMLImageElement,
+) {
+  const radius = size * 0.4;
+  ctx.save();
+
+  // Clip to circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+
+  // Draw image scaled to cover the circle
+  const imgAspect = img.naturalWidth / img.naturalHeight;
+  let drawW: number, drawH: number;
+  if (imgAspect > 1) {
+    drawH = radius * 2;
+    drawW = drawH * imgAspect;
+  } else {
+    drawW = radius * 2;
+    drawH = drawW / imgAspect;
+  }
+  ctx.drawImage(img, cx - drawW / 2, cy - drawH / 2, drawW, drawH);
+  ctx.restore();
+
+  // Circle border
+  ctx.save();
+  ctx.strokeStyle = COLORS.pigDark;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** Programmatic skinny pig icon (fallback when photo not loaded) */
+function drawPigFallback(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,

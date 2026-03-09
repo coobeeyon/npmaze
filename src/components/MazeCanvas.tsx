@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback, useState } from "react";
 import type { CellCoord, MazeState } from "../types";
 import type { ThemeMode } from "../theme/colors";
 import { drawMaze, hitTestWall, hitTestCell } from "../rendering/drawMaze";
+import { onPigImageLoad } from "../rendering/pigImage";
 
 export type PlacementMode = "start" | "end" | null;
 
@@ -87,7 +88,11 @@ export function MazeCanvas({ maze, editMode, solutionPath, start, end, placement
   useEffect(() => {
     redraw();
     window.addEventListener("resize", redraw);
-    return () => window.removeEventListener("resize", redraw);
+    const unsubPig = onPigImageLoad(redraw);
+    return () => {
+      window.removeEventListener("resize", redraw);
+      unsubPig();
+    };
   }, [redraw]);
 
   // Transform screen coordinates to virtual canvas coordinates
