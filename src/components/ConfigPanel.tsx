@@ -134,12 +134,12 @@ export function ConfigPanel({
               onConfigChange({ ...config, weave: e.target.checked })
             }
           />
-          Weave (crossings)
+          Weave maze
         </label>
         <span className="config-desc">
           {config.weave
-            ? "Paths can cross over/under each other"
-            : "Standard planar maze"}
+            ? "Paths tunnel over and under each other"
+            : "Standard flat maze"}
         </span>
       </div>
 

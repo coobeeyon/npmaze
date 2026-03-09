@@ -359,7 +359,7 @@ export default function App() {
         <div className="header-pig" aria-label="Skinny pig" role="img">&#x1f439;</div>
         <div>
           <h1 className="header-title">Skinny Pig Maze</h1>
-          <p className="header-subtitle">Non-planar maze generator</p>
+          <p className="header-subtitle">Weave maze generator — featuring hairless guinea pigs</p>
         </div>
         <button className="theme-toggle" onClick={toggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}>
           {theme === "light" ? "Dark" : "Light"}
@@ -390,6 +390,9 @@ export default function App() {
             linkCopied={linkCopied}
           />
           <DifficultyPanel score={difficulty} />
+          <div className="topology-info">
+            <p className="topology-desc" style={{ margin: 0 }}>Skinny Pigs are hairless guinea pigs — help them navigate through weave mazes where paths cross over and under each other!</p>
+          </div>
           <ShortcutHelp />
         </aside>
 
