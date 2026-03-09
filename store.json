@@ -369,6 +369,16 @@
       "created_at": "2026-03-09T13:11:49.054240232Z",
       "updated_at": "2026-03-09T13:11:49.054240232Z"
     },
+    "lb-nsb2": {
+      "id": "lb-nsb2",
+      "title": "Update app title, subtitle and UI copy for hairless guinea pig theme",
+      "description": "In src/App.tsx header: change subtitle from 'Non-planar maze generator' to something that explains weave mazes and skinny pigs, e.g. 'Weave maze generator — featuring hairless guinea pigs'. In src/components/ConfigPanel.tsx: update the weave checkbox label from 'Weave (crossings)' to 'Weave maze' and its description to 'Paths tunnel over and under each other'. Add a small tooltip or info text somewhere explaining what a Skinny Pig is: 'Skinny Pigs are hairless guinea pigs 🐾'. Update the page title in index.html.",
+      "item_type": "task",
+      "status": "open",
+      "priority": 2,
+      "created_at": "2026-03-09T13:13:06.662294437Z",
+      "updated_at": "2026-03-09T13:13:06.662294437Z"
+    },
     "lb-pmk2": {
       "id": "lb-pmk2",
       "title": "Maze statistics panel",
@@ -688,6 +698,11 @@
     },
     {
       "from_id": "lb-td2c",
+      "to_id": "lb-83aa",
+      "dep_type": "parent"
+    },
+    {
+      "from_id": "lb-nsb2",
       "to_id": "lb-83aa",
       "dep_type": "parent"
     }
