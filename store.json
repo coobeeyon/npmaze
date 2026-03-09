@@ -216,8 +216,9 @@
       "item_type": "task",
       "status": "open",
       "priority": 1,
+      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:12:22.763681593Z",
-      "updated_at": "2026-03-09T13:12:22.763681593Z"
+      "updated_at": "2026-03-09T13:27:41.743932494Z"
     },
     "lb-ev4z": {
       "id": "lb-ev4z",
