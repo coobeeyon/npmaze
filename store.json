@@ -364,11 +364,10 @@
       "title": "Remove wrap indicators from renderer",
       "description": "In src/rendering/drawMaze.ts: delete the drawWrapIndicators() function and its call from drawMaze(). Remove the wrapColor() helper. Remove wrap-related color references (wrapNorth, wrapSouth, wrapEast, wrapWest, wrapFlip) from src/theme/colors.ts. These only made sense for non-planar topologies.",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 1,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:11:49.054240232Z",
-      "updated_at": "2026-03-09T13:24:02.373517577Z"
+      "updated_at": "2026-03-09T13:27:25.498911160Z"
     },
     "lb-nsb2": {
       "id": "lb-nsb2",
