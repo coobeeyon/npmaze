@@ -15,11 +15,10 @@
       "title": "Remove SurfaceType and surface from types and config",
       "description": "In src/types.ts: delete SurfaceType type entirely. Remove 'surface: SurfaceType' field from MazeConfig. In src/maze/topology.ts: delete cylinderTopology, torusTopology, mobiusTopology, kleinTopology functions. Delete createTopology factory. Rename rectangleTopology to createRectangleTopology and export it directly. In App.tsx: remove 'surface' from DEFAULT_CONFIG, update all createTopology(config.surface, ...) calls to createRectangleTopology(rows, cols). In src/maze/difficulty.ts: update topology usage.",
       "item_type": "task",
-      "status": "open",
+      "status": "closed",
       "priority": 1,
-      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:11:40.216417548Z",
-      "updated_at": "2026-03-09T13:23:59.193247496Z"
+      "updated_at": "2026-03-09T13:27:25.483221354Z"
     },
     "lb-19of": {
       "id": "lb-19of",
