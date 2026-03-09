@@ -426,8 +426,9 @@
       "item_type": "task",
       "status": "open",
       "priority": 2,
+      "claimed_by": "agent-runner",
       "created_at": "2026-03-09T13:12:59.610072819Z",
-      "updated_at": "2026-03-09T13:12:59.610072819Z"
+      "updated_at": "2026-03-09T13:39:36.105429219Z"
     },
     "lb-uc58": {
       "id": "lb-uc58",
